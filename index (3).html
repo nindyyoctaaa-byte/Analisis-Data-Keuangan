@@ -1,0 +1,3220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BUSINESS INSIGHT AI – Smart Business & Financial Analyzer for UMKM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    :root {
+      --sage: #B7C9A8;
+      --sage-light: #DCE6D3;
+      --sage-soft: #EEF3EA;
+      --peach: #F6C6A8;
+      --peach-light: #FBE2D2;
+      --peach-soft: #FDF2EB;
+      --lilac: #D8C5E8;
+      --lilac-light: #EAE0F3;
+      --lilac-soft: #F5F0FA;
+      --ivory: #FAF7F0;
+      --olive: #465442;
+      --olive-dark: #333E30;
+      --olive-muted: #6E7B6A;
+      --white: #FFFFFF;
+      --border: #E5E2D8;
+      --danger: #C85A53;
+      --danger-soft: #FCECEB;
+      --success: #4E7A51;
+      --success-soft: #EAF4EB;
+      --warning: #B57C3A;
+      --warning-soft: #FCF3E8;
+      --shadow-sm: 0 2px 8px rgba(70, 84, 66, 0.06);
+      --shadow-md: 0 6px 20px rgba(70, 84, 66, 0.09);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --sidebar-w: 268px;
+      --transition: all 0.22s ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--ivory);
+      color: var(--olive);
+      line-height: 1.55;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Layout */
+    .app-shell { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sage);
+      color: var(--olive);
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      transition: transform 0.28s ease;
+      box-shadow: 2px 0 16px rgba(70, 84, 66, 0.08);
+    }
+    .sidebar-brand {
+      padding: 22px 20px 16px;
+      border-bottom: 1px solid rgba(70, 84, 66, 0.14);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      background: var(--olive);
+      color: var(--ivory);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 18px;
+      flex-shrink: 0;
+    }
+    .brand-text h1 { font-size: 15px; font-weight: 800; letter-spacing: 0.3px; line-height: 1.2; }
+    .brand-text p { font-size: 11px; color: var(--olive-dark); opacity: 0.85; margin-top: 2px; }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 12px 24px;
+    }
+    .nav-group-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--olive-dark);
+      opacity: 0.7;
+      padding: 12px 12px 6px;
+    }
+    .nav-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 13px;
+      margin-bottom: 3px;
+      border: none;
+      background: transparent;
+      color: var(--olive-dark);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      border-radius: 11px;
+      cursor: pointer;
+      text-align: left;
+      transition: var(--transition);
+    }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.45); }
+    .nav-item.active {
+      background: var(--olive);
+      color: var(--ivory);
+      box-shadow: 0 4px 10px rgba(70, 84, 66, 0.22);
+    }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    .sidebar-footer {
+      padding: 14px 16px;
+      border-top: 1px solid rgba(70, 84, 66, 0.14);
+      font-size: 11.5px;
+      color: var(--olive-dark);
+    }
+    .biz-mini-badge {
+      background: rgba(255,255,255,0.55);
+      padding: 9px 12px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .biz-mini-badge strong { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .biz-mini-badge span { font-size: 11px; opacity: 0.8; }
+
+    /* Main Content */
+    .main-wrap {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      width: calc(100% - var(--sidebar-w));
+    }
+
+    .topbar {
+      background: rgba(250, 247, 240, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 900;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .menu-toggle {
+      display: none;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      color: var(--olive);
+    }
+    .page-title-wrap h2 { font-size: 20px; font-weight: 800; color: var(--olive); line-height: 1.2; }
+    .page-title-wrap p { font-size: 12.5px; color: var(--olive-muted); }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .content-area {
+      padding: 24px 26px 48px;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Demo Banner */
+    .demo-banner {
+      background: var(--lilac-soft);
+      border: 1px solid var(--lilac);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+    .demo-banner-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Cards & Grids */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .card-title { font-size: 15.5px; font-weight: 700; color: var(--olive); }
+    .card-subtitle { font-size: 12.5px; color: var(--olive-muted); margin-top: 2px; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-20 { margin-top: 20px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-20 { margin-bottom: 20px; }
+
+    /* KPI Cards with strict palette */
+    .kpi-card {
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      border: 1px solid transparent;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .kpi-sage { background: var(--sage); color: var(--olive-dark); }
+    .kpi-peach { background: var(--peach); color: var(--olive-dark); }
+    .kpi-lilac { background: var(--lilac); color: var(--olive-dark); }
+    .kpi-white { background: var(--white); border-color: var(--border); color: var(--olive); }
+
+    .kpi-label { font-size: 12.5px; font-weight: 600; opacity: 0.85; display: flex; align-items: center; justify-content: space-between; }
+    .kpi-value { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; }
+    .kpi-meta { font-size: 11.5px; opacity: 0.8; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 16px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary { background: var(--olive); color: var(--ivory); }
+    .btn-primary:hover:not(:disabled) { background: var(--olive-dark); transform: translateY(-1px); }
+    .btn-sage { background: var(--sage); color: var(--olive-dark); }
+    .btn-sage:hover:not(:disabled) { background: #a8bd96; }
+    .btn-peach { background: var(--peach); color: var(--olive-dark); }
+    .btn-peach:hover:not(:disabled) { background: #efb591; }
+    .btn-lilac { background: var(--lilac); color: var(--olive-dark); }
+    .btn-lilac:hover:not(:disabled) { background: #cab2de; }
+    .btn-outline { background: var(--white); border-color: var(--border); color: var(--olive); }
+    .btn-outline:hover:not(:disabled) { background: var(--ivory); border-color: var(--olive); }
+    .btn-danger { background: var(--danger); color: var(--white); }
+    .btn-danger:hover:not(:disabled) { background: #b14842; }
+    .btn-sm { padding: 6px 11px; font-size: 12px; border-radius: 8px; }
+
+    /* Forms */
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .form-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 12.5px; font-weight: 600; color: var(--olive); }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--white);
+      color: var(--olive);
+      font-family: inherit;
+      font-size: 13.5px;
+      transition: var(--transition);
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--olive);
+      box-shadow: 0 0 0 3px rgba(183, 201, 168, 0.35);
+    }
+    textarea { resize: vertical; min-height: 76px; }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin-bottom: 18px;
+    }
+    .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--ivory);
+      color: var(--olive);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .pill.active { background: var(--olive); color: var(--ivory); border-color: var(--olive); }
+    .custom-date-inputs { display: none; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .custom-date-inputs.show { display: flex; }
+    .custom-date-inputs input { width: auto; padding: 6px 10px; font-size: 12.5px; }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--white); }
+    th, td { padding: 11px 13px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--sage-soft); color: var(--olive-dark); font-weight: 700; white-space: nowrap; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--ivory); }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+
+    /* Badges & Alerts */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .badge-sage { background: var(--sage-light); color: var(--olive-dark); }
+    .badge-peach { background: var(--peach-light); color: var(--olive-dark); }
+    .badge-lilac { background: var(--lilac-light); color: var(--olive-dark); }
+    .badge-success { background: var(--success-soft); color: var(--success); }
+    .badge-danger { background: var(--danger-soft); color: var(--danger); }
+    .badge-warning { background: var(--warning-soft); color: var(--warning); }
+
+    .alert {
+      padding: 13px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      border: 1px solid transparent;
+      margin-bottom: 16px;
+    }
+    .alert-info { background: var(--sage-soft); border-color: var(--sage); color: var(--olive-dark); }
+    .alert-warn { background: var(--peach-soft); border-color: var(--peach); color: var(--olive-dark); }
+    .alert-lilac { background: var(--lilac-soft); border-color: var(--lilac); color: var(--olive-dark); }
+
+    /* Calc Preview Box */
+    .calc-preview {
+      background: var(--ivory);
+      border: 1px solid var(--sage);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13.5px;
+      border-bottom: 1px dashed var(--border);
+    }
+    .calc-row:last-child { border-bottom: none; font-weight: 800; font-size: 15px; padding-top: 10px; }
+
+    /* Charts */
+    .chart-box { position: relative; height: 280px; width: 100%; }
+    .chart-box-sm { position: relative; height: 230px; width: 100%; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--border); margin-bottom: 18px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      color: var(--olive-muted);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border-bottom: 2.5px solid transparent;
+      transition: var(--transition);
+    }
+    .tab-btn.active { color: var(--olive); border-bottom-color: var(--olive); }
+
+    /* Chat UI */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 520px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--white);
+      overflow: hidden;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--ivory);
+    }
+    .chat-bubble {
+      max-width: 82%;
+      padding: 12px 15px;
+      border-radius: 14px;
+      font-size: 13.5px;
+      line-height: 1.55;
+      white-space: pre-line;
+    }
+    .chat-user {
+      align-self: flex-end;
+      background: var(--olive);
+      color: var(--ivory);
+      border-bottom-right-radius: 4px;
+    }
+    .chat-bot {
+      align-self: flex-start;
+      background: var(--white);
+      color: var(--olive);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-suggestions {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+    }
+    .chat-input-bar {
+      display: flex;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+    }
+
+    /* Insight Cards */
+    .insight-item {
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--olive);
+      background: var(--ivory);
+      margin-bottom: 12px;
+    }
+    .insight-item.sage { border-left-color: var(--sage); background: var(--sage-soft); }
+    .insight-item.peach { border-left-color: var(--peach); background: var(--peach-soft); }
+    .insight-item.lilac { border-left-color: var(--lilac); background: var(--lilac-soft); }
+    .insight-item h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .insight-item p { font-size: 13px; color: var(--olive-dark); }
+
+    /* Pagination */
+    .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; flex-wrap: wrap; gap: 10px; font-size: 13px; }
+    .page-btns { display: flex; gap: 6px; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 36px 20px;
+      color: var(--olive-muted);
+    }
+    .empty-state h4 { color: var(--olive); margin-bottom: 6px; font-size: 16px; }
+    .empty-state p { font-size: 13.5px; max-width: 460px; margin: 0 auto 14px; }
+
+    /* Toast */
+    .toast-wrap {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      background: var(--olive);
+      color: var(--ivory);
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      animation: fadeInUp 0.25s ease;
+    }
+    .toast.error { background: var(--danger); }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Section visibility */
+    .page-section { display: none; animation: fadeIn 0.2s ease; }
+    .page-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Overlay for mobile sidebar */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(51, 62, 48, 0.35);
+      z-index: 950;
+    }
+    .sidebar-overlay.show { display: block; }
+
+    /* Responsive */
+    @media (max-width: 1080px) {
+      .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 860px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-wrap { margin-left: 0; width: 100%; }
+      .menu-toggle { display: inline-flex; }
+      .grid-2, .grid-3, .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+      .content-area { padding: 16px 14px 40px; }
+      .topbar { padding: 12px 14px; }
+    }
+    @media (max-width: 520px) {
+      .grid-4 { grid-template-columns: 1fr; }
+    }
+
+    /* Print */
+    @media print {
+      .sidebar, .topbar, .demo-banner, .no-print { display: none !important; }
+      .main-wrap { margin-left: 0 !important; width: 100% !important; }
+      .card { box-shadow: none !important; border: 1px solid #ccc !important; }
+      body { background: #fff !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
+
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">BI</div>
+        <div class="brand-text">
+          <h1>BUSINESS INSIGHT AI</h1>
+          <p>Smart Analyzer for UMKM</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNav">
+        <div class="nav-group-label">Utama</div>
+        <button class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard Utama
+        </button>
+        <button class="nav-item" data-page="profil" onclick="navigate('profil')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+          Profil Bisnis
+        </button>
+
+        <div class="nav-group-label">Pencatatan Data</div>
+        <button class="nav-item" data-page="input" onclick="navigate('input')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+          Input Transaksi & Biaya
+        </button>
+        <button class="nav-item" data-page="harian" onclick="navigate('harian')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Penjualan Harian
+        </button>
+        <button class="nav-item" data-page="upload" onclick="navigate('upload')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Excel / CSV
+        </button>
+        <button class="nav-item" data-page="riwayat" onclick="navigate('riwayat')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Riwayat Transaksi
+        </button>
+
+        <div class="nav-group-label">Analisis Bisnis</div>
+        <button class="nav-item" data-page="analisis-penjualan" onclick="navigate('analisis-penjualan')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Analisis Penjualan
+        </button>
+        <button class="nav-item" data-page="analisis-produk" onclick="navigate('analisis-produk')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Analisis Produk
+        </button>
+        <button class="nav-item" data-page="analisis-keuangan" onclick="navigate('analisis-keuangan')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Analisis Keuangan
+        </button>
+        <button class="nav-item" data-page="analisis-pelanggan" onclick="navigate('analisis-pelanggan')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Analisis Pelanggan
+        </button>
+
+        <div class="nav-group-label">Cerdas & Laporan</div>
+        <button class="nav-item" data-page="prediksi" onclick="navigate('prediksi')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Prediksi Penjualan
+        </button>
+        <button class="nav-item" data-page="assistant" onclick="navigate('assistant')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          AI Business Assistant
+        </button>
+        <button class="nav-item" data-page="insight" onclick="navigate('insight')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+          Insight & Rekomendasi
+        </button>
+        <button class="nav-item" data-page="laporan" onclick="navigate('laporan')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Laporan Bisnis
+        </button>
+        <button class="nav-item" data-page="pengaturan" onclick="navigate('pengaturan')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Pengaturan
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="biz-mini-badge">
+          <strong id="sidebarBizName">Usaha Belum Diatur</strong>
+          <span id="sidebarBizType">Klik Profil Bisnis untuk mulai</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-wrap">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" onclick="toggleSidebar(true)" aria-label="Buka Menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="page-title-wrap">
+            <h2 id="topbarTitle">Dashboard Utama</h2>
+            <p id="topbarSubtitle">Ringkasan kondisi bisnis dan keuangan usaha Anda</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-sage btn-sm" onclick="navigate('input')">+ Catat Penjualan</button>
+          <button class="btn btn-primary btn-sm" onclick="navigate('laporan')">Unduh Laporan</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <!-- Demo / Status Banner -->
+        <div class="demo-banner" id="demoBanner" style="display:none;">
+          <div>
+            <strong>Mode Data Contoh Aktif:</strong> Anda sedang melihat data demonstrasi UMKM. Hapus data contoh kapan saja untuk mulai mencatat data usaha Anda yang sebenarnya.
+          </div>
+          <div class="demo-banner-actions">
+            <button class="btn btn-danger btn-sm" onclick="clearDemoData()">Hapus Data Contoh</button>
+          </div>
+        </div>
+
+        <!-- ==================== 1. DASHBOARD UTAMA ==================== -->
+        <section class="page-section active" id="page-dashboard">
+          <div class="filter-bar">
+            <strong style="font-size:13px;">Periode:</strong>
+            <div class="filter-pills" id="dashPeriodPills">
+              <button class="pill" data-period="today" onclick="setDashPeriod('today')">Hari Ini</button>
+              <button class="pill" data-period="week" onclick="setDashPeriod('week')">Minggu Ini</button>
+              <button class="pill active" data-period="month" onclick="setDashPeriod('month')">Bulan Ini</button>
+              <button class="pill" data-period="year" onclick="setDashPeriod('year')">Tahun Ini</button>
+              <button class="pill" data-period="all" onclick="setDashPeriod('all')">Semua Data</button>
+              <button class="pill" data-period="custom" onclick="setDashPeriod('custom')">Pilih Tanggal</button>
+            </div>
+            <div class="custom-date-inputs" id="dashCustomDates">
+              <input type="date" id="dashStartDate" onchange="renderDashboard()">
+              <span>s/d</span>
+              <input type="date" id="dashEndDate" onchange="renderDashboard()">
+            </div>
+          </div>
+
+          <div id="dashEmptyNotice" class="card mb-20" style="display:none;">
+            <div class="empty-state">
+              <h4>Belum Ada Data Transaksi pada Periode Ini</h4>
+              <p>Mulai catat penjualan pertama Anda, unggah file Excel/CSV, atau muat data contoh untuk mencoba seluruh fitur analisis.</p>
+              <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="navigate('input')">+ Catat Transaksi</button>
+                <button class="btn btn-sage" onclick="navigate('upload')">Upload Excel / CSV</button>
+                <button class="btn btn-lilac" onclick="loadDemoData()">Muat Data Contoh UMKM</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Primary KPIs (Sage Green, Peach, Lilac) -->
+          <div class="grid-4 mb-16">
+            <div class="kpi-card kpi-sage">
+              <div class="kpi-label"><span>Total Omzet</span><span>Omzet Bersih</span></div>
+              <div class="kpi-value" id="kpiOmzet">Rp0</div>
+              <div class="kpi-meta" id="kpiOmzetMeta">Setelah diskon</div>
+            </div>
+            <div class="kpi-card kpi-peach">
+              <div class="kpi-label"><span>Total Pengeluaran</span><span>HPP + Biaya</span></div>
+              <div class="kpi-value" id="kpiPengeluaran">Rp0</div>
+              <div class="kpi-meta" id="kpiPengeluaranMeta">HPP, biaya tambahan & operasional</div>
+            </div>
+            <div class="kpi-card kpi-lilac">
+              <div class="kpi-label"><span>Laba Bersih</span><span>Estimasi Bersih</span></div>
+              <div class="kpi-value" id="kpiLabaBersih">Rp0</div>
+              <div class="kpi-meta" id="kpiMarginMeta">Margin: 0%</div>
+            </div>
+            <div class="kpi-card kpi-white">
+              <div class="kpi-label"><span>Laba Kotor</span><span>Omzet - HPP</span></div>
+              <div class="kpi-value" id="kpiLabaKotor">Rp0</div>
+              <div class="kpi-meta" id="kpiHppMeta">Total HPP: Rp0</div>
+            </div>
+          </div>
+
+          <!-- Secondary KPIs -->
+          <div class="grid-3 mb-20">
+            <div class="kpi-card kpi-white">
+              <div class="kpi-label"><span>Jumlah Transaksi</span></div>
+              <div class="kpi-value" id="kpiJmlTransaksi">0</div>
+              <div class="kpi-meta">Transaksi penjualan tercatat</div>
+            </div>
+            <div class="kpi-card kpi-white">
+              <div class="kpi-label"><span>Produk Terjual</span></div>
+              <div class="kpi-value" id="kpiProdukTerjual">0 unit</div>
+              <div class="kpi-meta">Total kuantitas terjual</div>
+            </div>
+            <div class="kpi-card kpi-white">
+              <div class="kpi-label"><span>Rata-rata Nilai Transaksi</span></div>
+              <div class="kpi-value" id="kpiAvgTransaksi">Rp0</div>
+              <div class="kpi-meta">Omzet dibagi jumlah transaksi</div>
+            </div>
+          </div>
+
+          <!-- Charts Row 1 -->
+          <div class="grid-2 mb-20">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Perkembangan Omzet</div>
+                  <div class="card-subtitle">Tren omzet berdasarkan periode terpilih</div>
+                </div>
+              </div>
+              <div class="chart-box"><canvas id="chartDashOmzet"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Pendapatan vs Pengeluaran</div>
+                  <div class="card-subtitle">Perbandingan omzet, HPP, dan biaya operasional</div>
+                </div>
+              </div>
+              <div class="chart-box"><canvas id="chartDashRevExp"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Charts Row 2 & Top Products -->
+          <div class="grid-2 mb-20">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Grafik Laba Usaha</div>
+                  <div class="card-subtitle">Perbandingan laba kotor dan laba bersih</div>
+                </div>
+              </div>
+              <div class="chart-box"><canvas id="chartDashLaba"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Produk Terlaris</div>
+                  <div class="card-subtitle">Top 5 produk berdasarkan omzet & unit</div>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="navigate('analisis-produk')">Lihat Semua</button>
+              </div>
+              <div id="dashTopProducts"></div>
+            </div>
+          </div>
+
+          <!-- Summary, Insight & Recent Transactions -->
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Ringkasan Kondisi Bisnis & AI Insight</div>
+                  <div class="card-subtitle">Analisis otomatis lokal berdasarkan data Anda</div>
+                </div>
+                <button class="btn btn-lilac btn-sm" onclick="navigate('insight')">Detail Insight</button>
+              </div>
+              <div id="dashSummaryInsight"></div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Transaksi Terbaru</div>
+                  <div class="card-subtitle">5 transaksi terakhir tercatat</div>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="navigate('riwayat')">Riwayat Lengkap</button>
+              </div>
+              <div id="dashRecentTx"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 2. PROFIL BISNIS ==================== -->
+        <section class="page-section" id="page-profil">
+          <div class="card" style="max-width:820px;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Informasi Profil Usaha</div>
+                <div class="card-subtitle">Data ini akan tampil pada dashboard dan kop laporan bisnis Anda</div>
+              </div>
+              <span class="badge badge-sage" id="profilStatusBadge">Belum Disimpan</span>
+            </div>
+            <form id="formProfil" onsubmit="saveProfile(event)">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="profNamaUsaha">Nama Usaha *</label>
+                  <input type="text" id="profNamaUsaha" required placeholder="Contoh: Kedai Kopi Senja / Toko Berkah Jaya">
+                </div>
+                <div class="form-group">
+                  <label for="profPemilik">Nama Pemilik *</label>
+                  <input type="text" id="profPemilik" required placeholder="Nama lengkap pemilik usaha">
+                </div>
+                <div class="form-group">
+                  <label for="profJenis">Jenis Usaha *</label>
+                  <select id="profJenis" required>
+                    <option value="">-- Pilih Jenis Usaha --</option>
+                    <option value="Kuliner & F&B">UMKM Kuliner & F&B</option>
+                    <option value="Perdagangan & Toko">UMKM Perdagangan & Toko</option>
+                    <option value="Bisnis Online">Bisnis Online / E-Commerce</option>
+                    <option value="Usaha Jasa">Usaha Jasa</option>
+                    <option value="Kerajinan & Manufaktur">Kerajinan & Produksi</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="profMulai">Tanggal Mulai Usaha</label>
+                  <input type="date" id="profMulai">
+                </div>
+                <div class="form-group">
+                  <label for="profKontak">Nomor Kontak / WhatsApp (Opsional)</label>
+                  <input type="text" id="profKontak" placeholder="Contoh: 0812-3456-7890">
+                </div>
+                <div class="form-group">
+                  <label for="profAlamat">Alamat Usaha (Opsional)</label>
+                  <input type="text" id="profAlamat" placeholder="Alamat toko atau lokasi usaha">
+                </div>
+                <div class="form-group full">
+                  <label for="profDeskripsi">Deskripsi Singkat Usaha</label>
+                  <textarea id="profDeskripsi" placeholder="Ceritakan produk/jasa utama yang Anda jual..."></textarea>
+                </div>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:18px;">
+                <button type="submit" class="btn btn-primary">Simpan Profil Bisnis</button>
+                <button type="button" class="btn btn-outline" onclick="resetProfileForm()">Reset</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ==================== 3. INPUT PENJUALAN & BIAYA ==================== -->
+        <section class="page-section" id="page-input">
+          <div class="tabs">
+            <button class="tab-btn active" id="tabBtnSale" onclick="switchInputTab('sale')">Catat Penjualan Manual</button>
+            <button class="tab-btn" id="tabBtnExpense" onclick="switchInputTab('expense')">Catat Biaya Operasional</button>
+            <button class="tab-btn" id="tabBtnProducts" onclick="switchInputTab('products')">Daftar Produk</button>
+          </div>
+
+          <!-- Tab Penjualan -->
+          <div id="inputTabSale">
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title" id="saleFormTitle">Formulir Transaksi Penjualan</div>
+                    <div class="card-subtitle">Isi detail penjualan, perhitungan otomatis tampil di samping</div>
+                  </div>
+                </div>
+                <form id="formSale" onsubmit="saveSale(event)">
+                  <input type="hidden" id="saleEditId">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="saleDate">Tanggal Transaksi *</label>
+                      <input type="date" id="saleDate" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="saleProduct">Nama Produk *</label>
+                      <input type="text" id="saleProduct" list="productDatalist" required placeholder="Ketik atau pilih produk" onchange="autofillProductInfo()">
+                      <datalist id="productDatalist"></datalist>
+                    </div>
+                    <div class="form-group">
+                      <label for="saleCategory">Kategori Produk *</label>
+                      <input type="text" id="saleCategory" list="categoryDatalist" required placeholder="Contoh: Minuman, Makanan, Jasa">
+                      <datalist id="categoryDatalist"></datalist>
+                    </div>
+                    <div class="form-group">
+                      <label for="saleQty">Jumlah Terjual *</label>
+                      <input type="number" id="saleQty" min="1" step="1" value="1" required oninput="updateSalePreview()">
+                    </div>
+                    <div class="form-group">
+                      <label for="salePrice">Harga Jual / Unit (Rp) *</label>
+                      <input type="number" id="salePrice" min="0" step="100" required placeholder="Contoh: 25000" oninput="updateSalePreview()">
+                    </div>
+                    <div class="form-group">
+                      <label for="saleHpp">HPP / Modal / Unit (Rp) *</label>
+                      <input type="number" id="saleHpp" min="0" step="100" required placeholder="Contoh: 12000" oninput="updateSalePreview()">
+                    </div>
+                    <div class="form-group">
+                      <label for="saleDiscount">Diskon Total (Rp)</label>
+                      <input type="number" id="saleDiscount" min="0" step="100" value="0" oninput="updateSalePreview()">
+                    </div>
+                    <div class="form-group">
+                      <label for="saleExtraCost">Biaya Tambahan (Rp)</label>
+                      <input type="number" id="saleExtraCost" min="0" step="100" value="0" placeholder="Kemasan, admin, ongkir" oninput="updateSalePreview()">
+                    </div>
+                    <div class="form-group">
+                      <label for="salePayment">Metode Pembayaran *</label>
+                      <select id="salePayment" required>
+                        <option value="Tunai">Tunai</option>
+                        <option value="QRIS">QRIS</option>
+                        <option value="Transfer Bank">Transfer Bank</option>
+                        <option value="E-Wallet">E-Wallet</option>
+                        <option value="Lainnya">Lainnya</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="saleCustomer">Nama / ID Pelanggan (Opsional)</label>
+                      <input type="text" id="saleCustomer" placeholder="Untuk analisis pelanggan">
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;">
+                    <button type="submit" class="btn btn-primary" id="btnSaveSale">Simpan Transaksi</button>
+                    <button type="button" class="btn btn-outline" onclick="resetSaleForm()">Reset Formulir</button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Preview Perhitungan Otomatis</div>
+                    <div class="card-subtitle">Periksa kembali angka sebelum menyimpan transaksi</div>
+                  </div>
+                </div>
+                <div class="calc-preview">
+                  <div class="calc-row"><span>Total Penjualan Kotor (Qty × Harga)</span><strong id="prevGross">Rp0</strong></div>
+                  <div class="calc-row"><span>Total Diskon</span><strong id="prevDiscount">- Rp0</strong></div>
+                  <div class="calc-row"><span>Omzet Bersih (Penjualan - Diskon)</span><strong id="prevOmzet" style="color:var(--success);">Rp0</strong></div>
+                  <div class="calc-row"><span>Total HPP (Qty × HPP/unit)</span><strong id="prevHpp">Rp0</strong></div>
+                  <div class="calc-row"><span>Laba Kotor (Omzet - HPP)</span><strong id="prevGrossProfit">Rp0</strong></div>
+                  <div class="calc-row"><span>Biaya Tambahan Transaksi</span><strong id="prevExtra">- Rp0</strong></div>
+                  <div class="calc-row"><span>Laba Setelah Biaya Transaksi</span><strong id="prevNetProfit">Rp0</strong></div>
+                </div>
+                <div class="alert alert-info mt-16" style="margin-bottom:0;">
+                  <strong>Tips Akuntansi UMKM:</strong> Omzet berbeda dengan laba. Laba bersih usaha dihitung setelah mengurangi HPP, biaya tambahan transaksi, serta biaya operasional (sewa, listrik, gaji, dll).
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Biaya Operasional -->
+          <div id="inputTabExpense" style="display:none;">
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Catat Biaya Operasional / Pengeluaran</div>
+                    <div class="card-subtitle">Sewa tempat, listrik, gaji, bahan habis pakai, promosi, dll.</div>
+                  </div>
+                </div>
+                <form id="formExpense" onsubmit="saveExpense(event)">
+                  <input type="hidden" id="expEditId">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="expDate">Tanggal *</label>
+                      <input type="date" id="expDate" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="expCategory">Kategori Pengeluaran *</label>
+                      <select id="expCategory" required>
+                        <option value="Sewa Tempat">Sewa Tempat</option>
+                        <option value="Listrik, Air & Internet">Listrik, Air & Internet</option>
+                        <option value="Gaji Karyawan">Gaji Karyawan</option>
+                        <option value="Promosi & Iklan">Promosi & Iklan</option>
+                        <option value="Transportasi & Pengiriman">Transportasi & Pengiriman</option>
+                        <option value="Perlengkapan & Kemasan">Perlengkapan & Kemasan</option>
+                        <option value="Perawatan Alat">Perawatan Alat</option>
+                        <option value="Lainnya">Lainnya</option>
+                      </select>
+                    </div>
+                    <div class="form-group full">
+                      <label for="expAmount">Nominal Pengeluaran (Rp) *</label>
+                      <input type="number" id="expAmount" min="1" step="100" required placeholder="Contoh: 500000">
+                    </div>
+                    <div class="form-group full">
+                      <label for="expNote">Keterangan</label>
+                      <input type="text" id="expNote" placeholder="Contoh: Bayar listrik bulan ini">
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:10px; margin-top:16px;">
+                    <button type="submit" class="btn btn-peach" id="btnSaveExp">Simpan Pengeluaran</button>
+                    <button type="button" class="btn btn-outline" onclick="resetExpenseForm()">Reset</button>
+                  </div>
+                </form>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Daftar Biaya Operasional Tercatat</div>
+                    <div class="card-subtitle" id="expTotalSubtitle">Total: Rp0</div>
+                  </div>
+                </div>
+                <div class="table-wrap" style="max-height:360px; overflow-y:auto;">
+                  <table>
+                    <thead><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th class="text-right">Nominal</th><th class="text-center">Aksi</th></tr></thead>
+                    <tbody id="expenseTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Daftar Produk -->
+          <div id="inputTabProducts" style="display:none;">
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Tambah / Kelola Produk Master</div>
+                    <div class="card-subtitle">Mempercepat input penjualan karena harga & HPP terisi otomatis</div>
+                  </div>
+                </div>
+                <form id="formProduct" onsubmit="saveProduct(event)">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label for="prodName">Nama Produk *</label>
+                      <input type="text" id="prodName" required placeholder="Contoh: Es Kopi Susu Gula Aren">
+                    </div>
+                    <div class="form-group">
+                      <label for="prodCat">Kategori *</label>
+                      <input type="text" id="prodCat" required placeholder="Contoh: Minuman">
+                    </div>
+                    <div class="form-group">
+                      <label for="prodPrice">Harga Jual Default (Rp) *</label>
+                      <input type="number" id="prodPrice" min="0" step="100" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="prodHpp">HPP Default (Rp) *</label>
+                      <input type="number" id="prodHpp" min="0" step="100" required>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary mt-16">Simpan Produk</button>
+                </form>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">Katalog Produk Tersimpan</div>
+                </div>
+                <div class="table-wrap" style="max-height:340px; overflow-y:auto;">
+                  <table>
+                    <thead><tr><th>Produk</th><th>Kategori</th><th class="text-right">Harga</th><th class="text-right">HPP</th><th class="text-center">Hapus</th></tr></thead>
+                    <tbody id="productCatalogBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 4. PENJUALAN HARIAN ==================== -->
+        <section class="page-section" id="page-harian">
+          <div class="filter-bar">
+            <label for="dailyDatePicker" style="margin:0;">Pilih Tanggal:</label>
+            <input type="date" id="dailyDatePicker" style="width:auto;" onchange="renderDailyPage()">
+            <button class="btn btn-sage btn-sm" onclick="setDailyToday()">Hari Ini</button>
+            <button class="btn btn-primary btn-sm" onclick="quickAddForDailyDate()">+ Tambah Transaksi di Tanggal Ini</button>
+          </div>
+
+          <div class="grid-4 mb-20">
+            <div class="kpi-card kpi-sage">
+              <div class="kpi-label"><span>Omzet Harian</span></div>
+              <div class="kpi-value" id="dailyOmzet">Rp0</div>
+            </div>
+            <div class="kpi-card kpi-peach">
+              <div class="kpi-label"><span>Total HPP Harian</span></div>
+              <div class="kpi-value" id="dailyHpp">Rp0</div>
+            </div>
+            <div class="kpi-card kpi-lilac">
+              <div class="kpi-label"><span>Laba Harian</span></div>
+              <div class="kpi-value" id="dailyLaba">Rp0</div>
+            </div>
+            <div class="kpi-card kpi-white">
+              <div class="kpi-label"><span>Jumlah Transaksi</span></div>
+              <div class="kpi-value" id="dailyCount">0</div>
+            </div>
+          </div>
+
+          <div class="card mb-20">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Daftar Transaksi Tanggal <span id="dailyDateLabel"></span></div>
+                <div class="card-subtitle">Semua transaksi pada tanggal terpilih</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>No</th><th>Produk</th><th>Kategori</th><th class="text-right">Qty</th><th class="text-right">Omzet</th><th class="text-right">HPP</th><th class="text-right">Laba</th><th>Bayar</th><th class="text-center">Aksi</th></tr></thead>
+                <tbody id="dailyTxBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Rekap Penjualan Harian (14 Hari Terakhir dengan Transaksi)</div>
+                <div class="card-subtitle">Klik tanggal untuk melihat rincian transaksinya</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Tanggal</th><th class="text-right">Transaksi</th><th class="text-right">Unit Terjual</th><th class="text-right">Total Omzet</th><th class="text-right">Total HPP</th><th class="text-right">Total Laba</th></tr></thead>
+                <tbody id="dailyRecapBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 5. UPLOAD EXCEL / CSV ==================== -->
+        <section class="page-section" id="page-upload">
+          <div class="card mb-20">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Import Data Penjualan dari Excel (.xlsx / .xls) atau CSV</div>
+                <div class="card-subtitle">Data akan ditampilkan dalam preview terlebih dahulu sebelum diimpor ke sistem</div>
+              </div>
+              <button class="btn btn-sage btn-sm" onclick="downloadExcelTemplate()">Unduh Template Excel (.xlsx)</button>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+              <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="max-width:380px;" onchange="handleFileUpload(event)">
+              <button class="btn btn-outline btn-sm" onclick="resetUploadState()">Reset File</button>
+            </div>
+            <div class="alert alert-info mt-16" style="margin-bottom:0;">
+              <strong>Format Kolom yang Disarankan:</strong> Tanggal (YYYY-MM-DD), Nama Produk, Kategori, Jumlah, Harga Jual, HPP, Diskon, Biaya Tambahan, Metode Pembayaran, Pelanggan. Jika nama kolom di file Anda berbeda, Anda dapat memetakannya di bawah ini.
+            </div>
+          </div>
+
+          <div id="uploadMappingSection" class="card mb-20" style="display:none;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Pemetaan Kolom & Validasi Data</div>
+                <div class="card-subtitle" id="uploadFileMeta">File siap dipetakan</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="validateAndPreviewImport()">Terapkan Pemetaan & Cek Validasi</button>
+            </div>
+            <div class="form-grid-3" id="columnMappingGrid"></div>
+          </div>
+
+          <div id="uploadPreviewSection" class="card" style="display:none;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Preview Data Sebelum Impor</div>
+                <div class="card-subtitle" id="uploadValidationSummary"></div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-primary" id="btnConfirmImport" onclick="confirmImportData()">Konfirmasi & Impor Data Valid</button>
+              </div>
+            </div>
+            <div class="table-wrap" style="max-height:360px; overflow-y:auto;">
+              <table>
+                <thead><tr><th>Baris</th><th>Status</th><th>Tanggal</th><th>Produk</th><th>Qty</th><th class="text-right">Harga</th><th class="text-right">HPP</th><th class="text-right">Omzet</th><th>Keterangan</th></tr></thead>
+                <tbody id="uploadPreviewBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 6. RIWAYAT TRANSAKSI ==================== -->
+        <section class="page-section" id="page-riwayat">
+          <div class="filter-bar">
+            <input type="text" id="histSearch" placeholder="Cari nama produk / pelanggan..." style="max-width:230px;" oninput="renderHistory(1)">
+            <select id="histCategory" style="max-width:170px;" onchange="renderHistory(1)"><option value="">Semua Kategori</option></select>
+            <input type="date" id="histStart" style="width:auto;" onchange="renderHistory(1)" title="Tanggal Mulai">
+            <input type="date" id="histEnd" style="width:auto;" onchange="renderHistory(1)" title="Tanggal Akhir">
+            <select id="histSort" style="max-width:180px;" onchange="renderHistory(1)">
+              <option value="date_desc">Terbaru</option>
+              <option value="date_asc">Terlama</option>
+              <option value="omzet_desc">Omzet Tertinggi</option>
+              <option value="laba_desc">Laba Tertinggi</option>
+              <option value="qty_desc">Jumlah Terbanyak</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="resetHistoryFilters()">Reset Filter</button>
+          </div>
+
+          <div class="grid-3 mb-16">
+            <div class="kpi-card kpi-sage"><div class="kpi-label">Total Omzet (Hasil Filter)</div><div class="kpi-value" id="histTotalOmzet">Rp0</div></div>
+            <div class="kpi-card kpi-lilac"><div class="kpi-label">Total Laba (Hasil Filter)</div><div class="kpi-value" id="histTotalLaba">Rp0</div></div>
+            <div class="kpi-card kpi-white"><div class="kpi-label">Jumlah Transaksi</div><div class="kpi-value" id="histTotalCount">0</div></div>
+          </div>
+
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>No</th><th>Tanggal</th><th>Nama Produk</th><th class="text-right">Jml</th>
+                    <th class="text-right">Harga Jual</th><th class="text-right">HPP</th>
+                    <th class="text-right">Omzet</th><th class="text-right">Laba</th>
+                    <th>Pembayaran</th><th class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="historyPagination"></div>
+          </div>
+        </section>
+
+        <!-- ==================== 7. ANALISIS PENJUALAN ==================== -->
+        <section class="page-section" id="page-analisis-penjualan">
+          <div class="filter-bar">
+            <strong style="font-size:13px;">Tampilan Tren:</strong>
+            <div class="filter-pills" id="salesGranularityPills">
+              <button class="pill active" data-g="daily" onclick="setSalesGranularity('daily')">Harian</button>
+              <button class="pill" data-g="weekly" onclick="setSalesGranularity('weekly')">Mingguan</button>
+              <button class="pill" data-g="monthly" onclick="setSalesGranularity('monthly')">Bulanan</button>
+              <button class="pill" data-g="yearly" onclick="setSalesGranularity('yearly')">Tahunan</button>
+            </div>
+          </div>
+          <div class="grid-4 mb-20">
+            <div class="kpi-card kpi-sage"><div class="kpi-label">Total Omzet</div><div class="kpi-value" id="asOmzet">Rp0</div></div>
+            <div class="kpi-card kpi-white"><div class="kpi-label">Total Transaksi</div><div class="kpi-value" id="asCount">0</div></div>
+            <div class="kpi-card kpi-white"><div class="kpi-label">Produk Terjual</div><div class="kpi-value" id="asUnits">0</div></div>
+            <div class="kpi-card kpi-lilac"><div class="kpi-label">Rata-rata / Transaksi</div><div class="kpi-value" id="asAvg">Rp0</div></div>
+          </div>
+          <div class="card mb-20">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Grafik Perkembangan Penjualan</div>
+                <div class="card-subtitle" id="asChartSub">Tren omzet berdasarkan periode</div>
+              </div>
+            </div>
+            <div class="chart-box"><canvas id="chartSalesAnalysis"></canvas></div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title mb-16">Periode Tertinggi & Terendah</div>
+              <div id="asHighLow"></div>
+            </div>
+            <div class="card">
+              <div class="card-title mb-16">Penjelasan & Perbandingan Antarperiode</div>
+              <div id="asComparison"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 8. ANALISIS PRODUK ==================== -->
+        <section class="page-section" id="page-analisis-produk">
+          <div class="grid-3 mb-20">
+            <div class="kpi-card kpi-sage"><div class="kpi-label">Produk Paling Laris (Unit)</div><div class="kpi-value" style="font-size:18px;" id="apBestSeller">-</div><div class="kpi-meta" id="apBestSellerMeta"></div></div>
+            <div class="kpi-card kpi-lilac"><div class="kpi-label">Produk Paling Menguntungkan</div><div class="kpi-value" style="font-size:18px;" id="apMostProfit">-</div><div class="kpi-meta" id="apMostProfitMeta"></div></div>
+            <div class="kpi-card kpi-peach"><div class="kpi-label">Penjualan Terendah</div><div class="kpi-value" style="font-size:18px;" id="apLowest">-</div><div class="kpi-meta" id="apLowestMeta"></div></div>
+          </div>
+          <div class="grid-2 mb-20">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Grafik Omzet & Laba per Produk (Top 10)</div></div>
+              <div class="chart-box"><canvas id="chartProductAnalysis"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Rekomendasi Strategi Produk</div></div>
+              <div id="apRecommendations"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Tabel Kinerja Lengkap Produk</div></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Produk</th><th>Kategori</th><th class="text-right">Terjual</th><th class="text-right">Total Omzet</th><th class="text-right">Total HPP</th><th class="text-right">Total Laba</th><th class="text-right">Kontribusi Omzet</th></tr></thead>
+                <tbody id="apTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 9. ANALISIS KEUANGAN ==================== -->
+        <section class="page-section" id="page-analisis-keuangan">
+          <div id="finWarningBanner" class="alert alert-warn" style="display:none;"></div>
+          <div class="grid-4 mb-16">
+            <div class="kpi-card kpi-sage"><div class="kpi-label">Total Omzet</div><div class="kpi-value" id="finOmzet">Rp0</div></div>
+            <div class="kpi-card kpi-peach"><div class="kpi-label">Total HPP</div><div class="kpi-value" id="finHpp">Rp0</div></div>
+            <div class="kpi-card kpi-white"><div class="kpi-label">Laba Kotor (Omzet - HPP)</div><div class="kpi-value" id="finGrossProfit">Rp0</div></div>
+            <div class="kpi-card kpi-lilac"><div class="kpi-label">Laba Bersih</div><div class="kpi-value" id="finNetProfit">Rp0</div><div class="kpi-meta" id="finMargin">Margin: 0%</div></div>
+          </div>
+          <div class="grid-2 mb-20">
+            <div class="kpi-card kpi-peach"><div class="kpi-label">Biaya Operasional & Tambahan</div><div class="kpi-value" id="finOpEx">Rp0</div><div class="kpi-meta" id="finOpExMeta"></div></div>
+            <div class="kpi-card kpi-white"><div class="kpi-label">Total Pengeluaran Keseluruhan</div><div class="kpi-value" id="finTotalExp">Rp0</div><div class="kpi-meta">HPP + Biaya Tambahan + Biaya Operasional</div></div>
+          </div>
+          <div class="grid-2 mb-20">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Komposisi Pengeluaran</div></div>
+              <div class="chart-box"><canvas id="chartFinExpensePie"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Perkembangan Laba Kotor vs Laba Bersih</div></div>
+              <div class="chart-box"><canvas id="chartFinProfitTrend"></canvas></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title mb-16">Ringkasan Laporan Laba Rugi Sederhana</div>
+            <div id="finSummaryTable"></div>
+          </div>
+        </section>
+
+        <!-- ==================== 10. ANALISIS PELANGGAN ==================== -->
+        <section class="page-section" id="page-analisis-pelanggan">
+          <div id="custNoData" class="card" style="display:none;">
+            <div class="empty-state">
+              <h4>Data Pelanggan Belum Tersedia</h4>
+              <p>Analisis pelanggan belum dapat dilakukan secara akurat karena belum ada transaksi yang mencantumkan Nama atau ID Pelanggan. Anda dapat mengisi kolom "Nama / ID Pelanggan (Opsional)" saat mencatat penjualan.</p>
+              <button class="btn btn-primary" onclick="navigate('input')">Catat Transaksi dengan Pelanggan</button>
+            </div>
+          </div>
+          <div id="custContent" style="display:none;">
+            <div class="grid-4 mb-20">
+              <div class="kpi-card kpi-sage"><div class="kpi-label">Total Pelanggan Unik</div><div class="kpi-value" id="custTotal">0</div></div>
+              <div class="kpi-card kpi-lilac"><div class="kpi-label">Pelanggan Repeat Order</div><div class="kpi-value" id="custRepeat">0</div><div class="kpi-meta" id="custRepeatPct">0% dari total</div></div>
+              <div class="kpi-card kpi-white"><div class="kpi-label">Rata-rata Frekuensi Beli</div><div class="kpi-value" id="custFreq">0x</div></div>
+              <div class="kpi-card kpi-peach"><div class="kpi-label">Rata-rata Belanja / Pelanggan</div><div class="kpi-value" id="custAvgSpend">Rp0</div></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Daftar & Pola Pembelian Pelanggan</div></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Pelanggan</th><th class="text-right">Frekuensi</th><th class="text-right">Total Belanja</th><th class="text-right">Rata-rata / Transaksi</th><th>Produk Favorit</th><th>Status</th></tr></thead>
+                  <tbody id="custTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 11. PREDIKSI PENJUALAN ==================== -->
+        <section class="page-section" id="page-prediksi">
+          <div id="forecastInsufficient" class="card" style="display:none;">
+            <div class="empty-state">
+              <h4>Data Historis Belum Mencukupi untuk Prediksi</h4>
+              <p id="forecastNeedMsg">Sistem membutuhkan minimal data penjualan dari 2 bulan berbeda (atau minimal 5 hari transaksi berbeda) agar dapat menghitung estimasi tren penjualan secara wajar.</p>
+              <button class="btn btn-primary" onclick="navigate('input')">Tambah Data Penjualan</button>
+            </div>
+          </div>
+          <div id="forecastContent" style="display:none;">
+            <div class="alert alert-lilac">
+              <strong>Catatan Penting:</strong> Prediksi di bawah ini merupakan <strong>estimasi statistik</strong> menggunakan metode <em>Regresi Linier Sederhana</em> berdasarkan data historis Anda, bukan angka pasti. Faktor musiman, promosi, atau perubahan harga dapat memengaruhi hasil aktual.
+            </div>
+            <div class="grid-4 mb-20">
+              <div class="kpi-card kpi-sage"><div class="kpi-label">Prediksi Omzet Bulan Depan</div><div class="kpi-value" id="fcOmzet">Rp0</div></div>
+              <div class="kpi-card kpi-white"><div class="kpi-label">Prediksi Produk Terjual</div><div class="kpi-value" id="fcUnits">0 unit</div></div>
+              <div class="kpi-card kpi-lilac"><div class="kpi-label">Estimasi Laba Bersih</div><div class="kpi-value" id="fcProfit">Rp0</div></div>
+              <div class="kpi-card kpi-peach"><div class="kpi-label">Arah Tren Penjualan</div><div class="kpi-value" style="font-size:18px;" id="fcTrend">-</div></div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Grafik Aktual vs Prediksi Penjualan</div>
+                  <div class="card-subtitle" id="fcMethodExplain"></div>
+                </div>
+              </div>
+              <div class="chart-box"><canvas id="chartForecast"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 12. AI BUSINESS ASSISTANT ==================== -->
+        <section class="page-section" id="page-assistant">
+          <div class="alert alert-lilac">
+            <strong>Mode Analisis Otomatis Lokal:</strong> Asisten ini menganalisis langsung data transaksi dan keuangan yang tersimpan di browser Anda secara real-time. Fitur AI generatif berbasis cloud belum terhubung karena tidak ada backend/API eksternal (demi keamanan, API key tidak ditanamkan di file HTML).
+          </div>
+          <div class="chat-container">
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-suggestions">
+              <button class="pill" onclick="askAssistant('Bagaimana kondisi bisnis saya saat ini?')">Kondisi bisnis saat ini</button>
+              <button class="pill" onclick="askAssistant('Produk apa yang paling menguntungkan?')">Produk paling menguntungkan</button>
+              <button class="pill" onclick="askAssistant('Berapa total pengeluaran saya?')">Total pengeluaran</button>
+              <button class="pill" onclick="askAssistant('Mengapa laba usaha saya menurun?')">Evaluasi laba</button>
+              <button class="pill" onclick="askAssistant('Bagaimana cara meningkatkan omzet?')">Cara tingkatkan omzet</button>
+              <button class="pill" onclick="askAssistant('Produk apa yang penjualannya rendah?')">Produk penjualan rendah</button>
+            </div>
+            <form class="chat-input-bar" onsubmit="handleChatSubmit(event)">
+              <input type="text" id="chatInput" placeholder="Tanyakan sesuatu tentang bisnis Anda..." required>
+              <button type="submit" class="btn btn-primary">Kirim</button>
+              <button type="button" class="btn btn-outline" onclick="clearChatHistory()">Bersihkan</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- ==================== 13. AI BUSINESS INSIGHT ==================== -->
+        <section class="page-section" id="page-insight">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Insight & Rekomendasi Pengembangan Bisnis</div>
+                <div class="card-subtitle">Dihasilkan secara otomatis berdasarkan angka aktual usaha Anda</div>
+              </div>
+              <button class="btn btn-sage btn-sm" onclick="renderInsightPage()">Segarkan Analisis</button>
+            </div>
+            <div id="insightListContainer"></div>
+          </div>
+        </section>
+
+        <!-- ==================== 14. LAPORAN BISNIS ==================== -->
+        <section class="page-section" id="page-laporan">
+          <div class="card mb-20 no-print">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Pengaturan & Export Laporan Bisnis</div>
+                <div class="card-subtitle">Pilih jenis laporan dan rentang tanggal untuk melihat preview atau mengunduh</div>
+              </div>
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label for="repType">Jenis Laporan</label>
+                <select id="repType" onchange="renderReportPreview()">
+                  <option value="laba_rugi">Laporan Laba Rugi Sederhana</option>
+                  <option value="penjualan_harian">Laporan Penjualan Harian</option>
+                  <option value="penjualan_bulanan">Laporan Penjualan Bulanan</option>
+                  <option value="kinerja_produk">Laporan Kinerja Produk</option>
+                  <option value="pengeluaran">Laporan Pengeluaran Operasional</option>
+                  <option value="ringkasan_bisnis">Laporan Hasil Analisis Bisnis</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="repStart">Tanggal Mulai</label>
+                <input type="date" id="repStart" onchange="renderReportPreview()">
+              </div>
+              <div class="form-group">
+                <label for="repEnd">Tanggal Akhir</label>
+                <input type="date" id="repEnd" onchange="renderReportPreview()">
+              </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="exportReportPDF()">Export PDF</button>
+              <button class="btn btn-sage" onclick="exportReportExcel()">Export Excel (.xlsx)</button>
+              <button class="btn btn-outline" onclick="window.print()">Cetak Laporan</button>
+            </div>
+          </div>
+
+          <div class="card" id="reportPreviewCard">
+            <div id="reportPreviewContent"></div>
+          </div>
+        </section>
+
+        <!-- ==================== 15. PENGATURAN ==================== -->
+        <section class="page-section" id="page-pengaturan">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Pengaturan Umum</div></div>
+              <div class="form-group mb-16">
+                <label for="setDefaultPeriod">Periode Default Dashboard</label>
+                <select id="setDefaultPeriod" onchange="saveSettings()">
+                  <option value="today">Hari Ini</option>
+                  <option value="week">Minggu Ini</option>
+                  <option value="month">Bulan Ini</option>
+                  <option value="year">Tahun Ini</option>
+                  <option value="all">Semua Data</option>
+                </select>
+              </div>
+              <div class="form-group mb-16">
+                <label>Mata Uang</label>
+                <input type="text" value="Rupiah Indonesia (IDR / Rp)" disabled>
+              </div>
+              <button class="btn btn-outline" onclick="navigate('profil')">Edit Profil Bisnis</button>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><div class="card-title">Cadangan (Backup) & Pengelolaan Data</div></div>
+              <p style="font-size:13px; color:var(--olive-muted); margin-bottom:14px;">
+                Ekspor seluruh data Anda ke file JSON agar aman dan dapat dipindahkan ke perangkat lain.
+              </p>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+                <button class="btn btn-primary" onclick="backupAllData()">Unduh Backup (.json)</button>
+                <label class="btn btn-sage" style="margin:0; cursor:pointer;">
+                  Restore dari JSON
+                  <input type="file" accept=".json" style="display:none;" onchange="restoreAllData(event)">
+                </label>
+                <button class="btn btn-lilac" onclick="loadDemoData()">Muat Data Contoh</button>
+              </div>
+              <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
+              <button class="btn btn-danger" onclick="confirmDeleteAllData()">Hapus Seluruh Data Permanen</button>
+            </div>
+          </div>
+
+          <div class="card mt-20">
+            <div class="card-title mb-16">Informasi Penyimpanan & Batasan Teknologi</div>
+            <div class="alert alert-info" style="margin-bottom:0;">
+              <ul style="padding-left:18px; line-height:1.8;">
+                <li><strong>Penyimpanan Lokal (localStorage):</strong> Seluruh data transaksi, pengeluaran, dan profil bisnis tersimpan di browser pada perangkat ini. Data tetap aman saat halaman ditutup atau dimuat ulang, tetapi tidak otomatis tersinkronisasi ke perangkat lain.</li>
+                <li><strong>Keamanan & Privasi:</strong> Website ini berjalan 100% di sisi klien (statis) tanpa mengirim data usaha Anda ke server pihak ketiga.</li>
+                <li><strong>Fitur Cloud/AI Generatif:</strong> Untuk sinkronisasi multi-perangkat, sistem akun online, atau integrasi AI generatif (LLM), diperlukan backend server yang aman agar API key tidak terekspos di file HTML.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    // =========================================================================
+    // STATE & STORAGE MANAGEMENT
+    // =========================================================================
+    const STORAGE_KEY = 'business_insight_ai_v1';
+    let appState = {
+      profile: { name: '', owner: '', type: '', startDate: '', contact: '', address: '', desc: '' },
+      transactions: [],
+      expenses: [],
+      products: [],
+      settings: { defaultPeriod: 'month' },
+      isDemo: false,
+      chatHistory: []
+    };
+
+    let currentDashPeriod = 'month';
+    let currentSalesGranularity = 'daily';
+    let currentHistPage = 1;
+    const HIST_PER_PAGE = 10;
+    let charts = {};
+
+    // Upload state
+    let uploadedRawRows = [];
+    let uploadedHeaders = [];
+    let validatedImportRows = [];
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appState = Object.assign(appState, parsed);
+          if (!Array.isArray(appState.transactions)) appState.transactions = [];
+          if (!Array.isArray(appState.expenses)) appState.expenses = [];
+          if (!Array.isArray(appState.products)) appState.products = [];
+          if (!Array.isArray(appState.chatHistory)) appState.chatHistory = [];
+        }
+      } catch (e) {
+        console.error('Gagal memuat data:', e);
+      }
+      currentDashPeriod = appState.settings.defaultPeriod || 'month';
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        showToast('Gagal menyimpan ke browser (penyimpanan penuh).', true);
+      }
+    }
+
+    // =========================================================================
+    // UTILITIES & CALCULATIONS
+    // =========================================================================
+    function formatRp(num) {
+      const n = Math.round(Number(num) || 0);
+      const sign = n < 0 ? '-' : '';
+      return sign + 'Rp' + Math.abs(n).toLocaleString('id-ID');
+    }
+
+    function todayISO() {
+      const d = new Date();
+      const offset = d.getTimezoneOffset() * 60000;
+      return new Date(d.getTime() - offset).toISOString().slice(0, 10);
+    }
+
+    function genId() {
+      return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+    }
+
+    function calcTx(tx) {
+      const qty = Math.max(0, Number(tx.qty) || 0);
+      const price = Math.max(0, Number(tx.price) || 0);
+      const hppUnit = Math.max(0, Number(tx.hpp) || 0);
+      const discount = Math.max(0, Number(tx.discount) || 0);
+      const extraCost = Math.max(0, Number(tx.extraCost) || 0);
+      const grossSales = qty * price;
+      const omzet = Math.max(0, grossSales - discount);
+      const totalHpp = qty * hppUnit;
+      const grossProfit = omzet - totalHpp;
+      const netTxProfit = grossProfit - extraCost;
+      return { grossSales, discount, omzet, totalHpp, grossProfit, extraCost, netTxProfit };
+    }
+
+    function showToast(msg, isError = false) {
+      const wrap = document.getElementById('toastWrap');
+      const el = document.createElement('div');
+      el.className = 'toast' + (isError ? ' error' : '');
+      el.textContent = msg;
+      wrap.appendChild(el);
+      setTimeout(() => { el.remove(); }, 3200);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function getPeriodBounds(period, customStart, customEnd) {
+      const now = new Date();
+      const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+      const fmt = dt => {
+        const off = dt.getTimezoneOffset() * 60000;
+        return new Date(dt.getTime() - off).toISOString().slice(0, 10);
+      };
+      if (period === 'today') {
+        const t = fmt(now);
+        return { start: t, end: t };
+      }
+      if (period === 'week') {
+        const day = now.getDay() || 7;
+        const start = new Date(y, m, d - day + 1);
+        return { start: fmt(start), end: fmt(now) };
+      }
+      if (period === 'month') {
+        return { start: fmt(new Date(y, m, 1)), end: fmt(new Date(y, m + 1, 0)) };
+      }
+      if (period === 'year') {
+        return { start: `${y}-01-01`, end: `${y}-12-31` };
+      }
+      if (period === 'custom') {
+        return { start: customStart || '1900-01-01', end: customEnd || '2999-12-31' };
+      }
+      return { start: '1900-01-01', end: '2999-12-31' };
+    }
+
+    function filterByDate(arr, start, end) {
+      return arr.filter(item => (!start || item.date >= start) && (!end || item.date <= end));
+    }
+
+    function destroyChart(key) {
+      if (charts[key]) {
+        charts[key].destroy();
+        delete charts[key];
+      }
+    }
+
+    // =========================================================================
+    // NAVIGATION
+    // =========================================================================
+    const pageMeta = {
+      'dashboard': ['Dashboard Utama', 'Ringkasan kondisi bisnis dan keuangan usaha Anda'],
+      'profil': ['Profil Bisnis', 'Kelola identitas dan informasi usaha UMKM Anda'],
+      'input': ['Input Transaksi & Biaya', 'Catat penjualan manual, biaya operasional, dan katalog produk'],
+      'harian': ['Pencatatan Penjualan Harian', 'Pantau dan kelola transaksi berdasarkan tanggal harian'],
+      'upload': ['Upload Data Excel / CSV', 'Impor data penjualan massal dengan validasi otomatis'],
+      'riwayat': ['Riwayat Transaksi', 'Cari, filter, urutkan, dan kelola seluruh transaksi'],
+      'analisis-penjualan': ['Analisis Penjualan', 'Pantau tren harian, mingguan, bulanan, dan tahunan'],
+      'analisis-produk': ['Analisis Produk', 'Ketahui produk paling laris, paling untung, dan rekomendasi'],
+      'analisis-keuangan': ['Analisis Keuangan', 'Pahami omzet, HPP, laba kotor, biaya operasional, dan margin'],
+      'analisis-pelanggan': ['Analisis Pelanggan', 'Pola pembelian dan retensi pelanggan Anda'],
+      'prediksi': ['Prediksi Penjualan', 'Estimasi tren penjualan bulan berikutnya dari data historis'],
+      'assistant': ['AI Business Assistant', 'Tanya jawab kondisi bisnis berdasarkan data aktual Anda'],
+      'insight': ['AI Business Insight & Rekomendasi', 'Rekomendasi strategis otomatis dengan angka pendukung'],
+      'laporan': ['Laporan Bisnis', 'Preview, cetak, dan ekspor laporan ke PDF atau Excel'],
+      'pengaturan': ['Pengaturan', 'Preferensi aplikasi, backup, restore, dan pengelolaan data']
+    };
+
+    function navigate(pageId) {
+      document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('page-' + pageId);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach(b => {
+        b.classList.toggle('active', b.dataset.page === pageId);
+      });
+
+      const meta = pageMeta[pageId] || ['BUSINESS INSIGHT AI', ''];
+      document.getElementById('topbarTitle').textContent = meta[0];
+      document.getElementById('topbarSubtitle').textContent = meta[1];
+      toggleSidebar(false);
+
+      // Render page-specific data
+      if (pageId === 'dashboard') renderDashboard();
+      else if (pageId === 'profil') renderProfile();
+      else if (pageId === 'input') { populateProductDatalists(); renderExpenseTable(); renderProductCatalog(); updateSalePreview(); }
+      else if (pageId === 'harian') renderDailyPage();
+      else if (pageId === 'riwayat') { populateHistoryFilters(); renderHistory(1); }
+      else if (pageId === 'analisis-penjualan') renderSalesAnalysis();
+      else if (pageId === 'analisis-produk') renderProductAnalysis();
+      else if (pageId === 'analisis-keuangan') renderFinancialAnalysis();
+      else if (pageId === 'analisis-pelanggan') renderCustomerAnalysis();
+      else if (pageId === 'prediksi') renderForecast();
+      else if (pageId === 'assistant') renderChat();
+      else if (pageId === 'insight') renderInsightPage();
+      else if (pageId === 'laporan') renderReportPreview();
+      else if (pageId === 'pengaturan') renderSettings();
+    }
+
+    function toggleSidebar(open) {
+      document.getElementById('sidebar').classList.toggle('open', open);
+      document.getElementById('sidebarOverlay').classList.toggle('show', open);
+    }
+
+    function updateGlobalUI() {
+      const p = appState.profile;
+      document.getElementById('sidebarBizName').textContent = p.name || 'Usaha Belum Diatur';
+      document.getElementById('sidebarBizType').textContent = p.type || 'Klik Profil Bisnis untuk mulai';
+      document.getElementById('demoBanner').style.display = appState.isDemo ? 'flex' : 'none';
+    }
+
+    // =========================================================================
+    // DEMO DATA
+    // =========================================================================
+    function loadDemoData() {
+      if (appState.transactions.length > 0 && !appState.isDemo) {
+        if (!confirm('Anda sudah memiliki data transaksi. Muat data contoh akan menggantikan data saat ini. Lanjutkan?')) return;
+      }
+      const now = new Date();
+      const ym = (offsetMonths) => {
+        const d = new Date(now.getFullYear(), now.getMonth() + offsetMonths, 1);
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      };
+      const m0 = ym(0), m1 = ym(-1), m2 = ym(-2);
+
+      appState.profile = {
+        name: 'Kedai Kopi & Roti Senja',
+        owner: 'Rina Wijaya',
+        type: 'Kuliner & F&B',
+        startDate: '2024-03-10',
+        contact: '0812-9876-5432',
+        address: 'Jl. Kaliurang KM 6, Sleman, Yogyakarta',
+        desc: 'Kedai kopi lokal dan roti artisan untuk pelanggan harian dan pekerja remote.'
+      };
+      appState.products = [
+        { name: 'Es Kopi Susu Aren', category: 'Minuman', price: 22000, hpp: 9500 },
+        { name: 'Matcha Latte', category: 'Minuman', price: 26000, hpp: 12000 },
+        { name: 'Croissant Butter', category: 'Makanan', price: 24000, hpp: 11000 },
+        { name: 'Roti Bakar Cokelat', category: 'Makanan', price: 18000, hpp: 8000 },
+        { name: 'Teh Tarik Dingin', category: 'Minuman', price: 15000, hpp: 5500 }
+      ];
+      appState.transactions = [
+        { id: genId(), date: `${m2}-05`, product: 'Es Kopi Susu Aren', category: 'Minuman', qty: 18, price: 22000, hpp: 9500, discount: 10000, extraCost: 5000, payment: 'QRIS', customer: 'Budi' },
+        { id: genId(), date: `${m2}-12`, product: 'Croissant Butter', category: 'Makanan', qty: 12, price: 24000, hpp: 11000, discount: 0, extraCost: 4000, payment: 'Tunai', customer: 'Siti' },
+        { id: genId(), date: `${m2}-20`, product: 'Matcha Latte', category: 'Minuman', qty: 10, price: 26000, hpp: 12000, discount: 5000, extraCost: 3000, payment: 'QRIS', customer: 'Andi' },
+        { id: genId(), date: `${m1}-04`, product: 'Es Kopi Susu Aren', category: 'Minuman', qty: 24, price: 22000, hpp: 9500, discount: 15000, extraCost: 6000, payment: 'QRIS', customer: 'Budi' },
+        { id: genId(), date: `${m1}-11`, product: 'Roti Bakar Cokelat', category: 'Makanan', qty: 15, price: 18000, hpp: 8000, discount: 0, extraCost: 4000, payment: 'Tunai', customer: 'Dewi' },
+        { id: genId(), date: `${m1}-18`, product: 'Croissant Butter', category: 'Makanan', qty: 16, price: 24000, hpp: 11000, discount: 10000, extraCost: 5000, payment: 'Transfer Bank', customer: 'Siti' },
+        { id: genId(), date: `${m1}-25`, product: 'Teh Tarik Dingin', category: 'Minuman', qty: 9, price: 15000, hpp: 5500, discount: 0, extraCost: 2000, payment: 'Tunai', customer: '' },
+        { id: genId(), date: `${m0}-02`, product: 'Es Kopi Susu Aren', category: 'Minuman', qty: 28, price: 22000, hpp: 9500, discount: 20000, extraCost: 7000, payment: 'QRIS', customer: 'Budi' },
+        { id: genId(), date: `${m0}-06`, product: 'Matcha Latte', category: 'Minuman', qty: 16, price: 26000, hpp: 12000, discount: 10000, extraCost: 4000, payment: 'E-Wallet', customer: 'Andi' },
+        { id: genId(), date: `${m0}-10`, product: 'Croissant Butter', category: 'Makanan', qty: 20, price: 24000, hpp: 11000, discount: 12000, extraCost: 5000, payment: 'QRIS', customer: 'Siti' },
+        { id: genId(), date: todayISO(), product: 'Es Kopi Susu Aren', category: 'Minuman', qty: 14, price: 22000, hpp: 9500, discount: 0, extraCost: 3000, payment: 'QRIS', customer: 'Raka' }
+      ];
+      appState.expenses = [
+        { id: genId(), date: `${m2}-01`, category: 'Sewa Tempat', amount: 350000, note: 'Alokasi sewa bulanan' },
+        { id: genId(), date: `${m2}-15`, category: 'Listrik, Air & Internet', amount: 120000, note: 'Tagihan bulanan' },
+        { id: genId(), date: `${m1}-01`, category: 'Sewa Tempat', amount: 350000, note: 'Alokasi sewa bulanan' },
+        { id: genId(), date: `${m1}-15`, category: 'Promosi & Iklan', amount: 150000, note: 'Iklan Instagram lokal' },
+        { id: genId(), date: `${m0}-01`, category: 'Sewa Tempat', amount: 350000, note: 'Alokasi sewa bulanan' },
+        { id: genId(), date: `${m0}-08`, category: 'Listrik, Air & Internet', amount: 135000, note: 'Tagihan bulan ini' }
+      ];
+      appState.isDemo = true;
+      saveState();
+      updateGlobalUI();
+      showToast('Data contoh UMKM berhasil dimuat!');
+      navigate('dashboard');
+    }
+
+    function clearDemoData() {
+      if (!confirm('Hapus seluruh data contoh dan mulai dengan data kosong?')) return;
+      appState.transactions = [];
+      appState.expenses = [];
+      appState.products = [];
+      appState.isDemo = false;
+      appState.chatHistory = [];
+      saveState();
+      updateGlobalUI();
+      showToast('Data contoh berhasil dihapus.');
+      navigate('dashboard');
+    }
+
+    // =========================================================================
+    // 1. DASHBOARD
+    // =========================================================================
+    function setDashPeriod(period) {
+      currentDashPeriod = period;
+      document.querySelectorAll('#dashPeriodPills .pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.period === period);
+      });
+      document.getElementById('dashCustomDates').classList.toggle('show', period === 'custom');
+      renderDashboard();
+    }
+
+    function renderDashboard() {
+      const bounds = getPeriodBounds(
+        currentDashPeriod,
+        document.getElementById('dashStartDate').value,
+        document.getElementById('dashEndDate').value
+      );
+      const txs = filterByDate(appState.transactions, bounds.start, bounds.end);
+      const exps = filterByDate(appState.expenses, bounds.start, bounds.end);
+
+      document.getElementById('dashEmptyNotice').style.display = (txs.length === 0 && exps.length === 0) ? 'block' : 'none';
+
+      let totalOmzet = 0, totalHpp = 0, totalExtra = 0, totalUnits = 0;
+      txs.forEach(t => {
+        const c = calcTx(t);
+        totalOmzet += c.omzet;
+        totalHpp += c.totalHpp;
+        totalExtra += c.extraCost;
+        totalUnits += Number(t.qty) || 0;
+      });
+      const totalOpEx = exps.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      const totalPengeluaran = totalHpp + totalExtra + totalOpEx;
+      const labaKotor = totalOmzet - totalHpp;
+      const labaBersih = labaKotor - totalExtra - totalOpEx;
+      const margin = totalOmzet > 0 ? (labaBersih / totalOmzet) * 100 : 0;
+      const avgTx = txs.length > 0 ? totalOmzet / txs.length : 0;
+
+      document.getElementById('kpiOmzet').textContent = formatRp(totalOmzet);
+      document.getElementById('kpiPengeluaran').textContent = formatRp(totalPengeluaran);
+      document.getElementById('kpiLabaBersih').textContent = formatRp(labaBersih);
+      document.getElementById('kpiMarginMeta').textContent = `Margin bersih: ${margin.toFixed(1)}%` + (totalOpEx === 0 ? ' (belum termasuk biaya operasional)' : '');
+      document.getElementById('kpiLabaKotor').textContent = formatRp(labaKotor);
+      document.getElementById('kpiHppMeta').textContent = `Total HPP: ${formatRp(totalHpp)}`;
+      document.getElementById('kpiJmlTransaksi').textContent = txs.length;
+      document.getElementById('kpiProdukTerjual').textContent = totalUnits + ' unit';
+      document.getElementById('kpiAvgTransaksi').textContent = formatRp(avgTx);
+
+      // Group by date for charts
+      const byDate = {};
+      txs.forEach(t => {
+        if (!byDate[t.date]) byDate[t.date] = { omzet: 0, hpp: 0, extra: 0, opex: 0 };
+        const c = calcTx(t);
+        byDate[t.date].omzet += c.omzet;
+        byDate[t.date].hpp += c.totalHpp;
+        byDate[t.date].extra += c.extraCost;
+      });
+      exps.forEach(e => {
+        if (!byDate[e.date]) byDate[e.date] = { omzet: 0, hpp: 0, extra: 0, opex: 0 };
+        byDate[e.date].opex += Number(e.amount) || 0;
+      });
+      const dates = Object.keys(byDate).sort();
+
+      // Chart 1: Perkembangan Omzet
+      destroyChart('dashOmzet');
+      charts.dashOmzet = new Chart(document.getElementById('chartDashOmzet'), {
+        type: 'line',
+        data: {
+          labels: dates.length ? dates : ['Belum ada data'],
+          datasets: [{
+            label: 'Omzet (Rp)',
+            data: dates.length ? dates.map(d => byDate[d].omzet) : [0],
+            borderColor: '#465442',
+            backgroundColor: 'rgba(183, 201, 168, 0.45)',
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#465442'
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+      // Chart 2: Pendapatan vs Pengeluaran
+      destroyChart('dashRevExp');
+      charts.dashRevExp = new Chart(document.getElementById('chartDashRevExp'), {
+        type: 'bar',
+        data: {
+          labels: ['Omzet', 'HPP', 'Biaya Operasional & Tambahan'],
+          datasets: [{
+            label: 'Nominal (Rp)',
+            data: [totalOmzet, totalHpp, totalOpEx + totalExtra],
+            backgroundColor: ['#B7C9A8', '#F6C6A8', '#D8C5E8'],
+            borderRadius: 8
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+      // Chart 3: Laba Kotor & Laba Bersih
+      destroyChart('dashLaba');
+      charts.dashLaba = new Chart(document.getElementById('chartDashLaba'), {
+        type: 'bar',
+        data: {
+          labels: dates.length ? dates : ['Belum ada data'],
+          datasets: [
+            { label: 'Laba Kotor', data: dates.length ? dates.map(d => byDate[d].omzet - byDate[d].hpp) : [0], backgroundColor: '#B7C9A8', borderRadius: 6 },
+            { label: 'Laba Bersih', data: dates.length ? dates.map(d => byDate[d].omzet - byDate[d].hpp - byDate[d].extra - byDate[d].opex) : [0], backgroundColor: '#D8C5E8', borderRadius: 6 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // Top Products
+      const prodMap = {};
+      txs.forEach(t => {
+        const c = calcTx(t);
+        if (!prodMap[t.product]) prodMap[t.product] = { qty: 0, omzet: 0, laba: 0 };
+        prodMap[t.product].qty += Number(t.qty) || 0;
+        prodMap[t.product].omzet += c.omzet;
+        prodMap[t.product].laba += c.netTxProfit;
+      });
+      const topProds = Object.entries(prodMap).sort((a, b) => b[1].omzet - a[1].omzet).slice(0, 5);
+      document.getElementById('dashTopProducts').innerHTML = topProds.length ? `
+        <div class="table-wrap"><table>
+          <thead><tr><th>Produk</th><th class="text-right">Terjual</th><th class="text-right">Omzet</th></tr></thead>
+          <tbody>${topProds.map(([name, v]) => `<tr><td><strong>${escapeHtml(name)}</strong></td><td class="text-right">${v.qty} unit</td><td class="text-right">${formatRp(v.omzet)}</td></tr>`).join('')}</tbody>
+        </table></div>` : '<p style="font-size:13px;color:var(--olive-muted);">Belum ada data produk pada periode ini.</p>';
+
+      // Recent Transactions
+      const recent = [...txs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+      document.getElementById('dashRecentTx').innerHTML = recent.length ? `
+        <div class="table-wrap"><table>
+          <thead><tr><th>Tanggal</th><th>Produk</th><th class="text-right">Omzet</th><th class="text-right">Laba</th></tr></thead>
+          <tbody>${recent.map(t => { const c = calcTx(t); return `<tr><td>${t.date}</td><td>${escapeHtml(t.product)} (${t.qty})</td><td class="text-right">${formatRp(c.omzet)}</td><td class="text-right">${formatRp(c.netTxProfit)}</td></tr>`; }).join('')}</tbody>
+        </table></div>` : '<p style="font-size:13px;color:var(--olive-muted);">Belum ada transaksi tercatat.</p>';
+
+      // Summary & Insight
+      const insights = generateBusinessInsights(txs, exps);
+      document.getElementById('dashSummaryInsight').innerHTML = insights.slice(0, 3).map(ins => `
+        <div class="insight-item ${ins.tone}">
+          <h4>${ins.title}</h4>
+          <p>${ins.body}</p>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 2. PROFIL BISNIS
+    // =========================================================================
+    function renderProfile() {
+      const p = appState.profile;
+      document.getElementById('profNamaUsaha').value = p.name || '';
+      document.getElementById('profPemilik').value = p.owner || '';
+      document.getElementById('profJenis').value = p.type || '';
+      document.getElementById('profMulai').value = p.startDate || '';
+      document.getElementById('profKontak').value = p.contact || '';
+      document.getElementById('profAlamat').value = p.address || '';
+      document.getElementById('profDeskripsi').value = p.desc || '';
+      document.getElementById('profilStatusBadge').textContent = p.name ? 'Tersimpan' : 'Belum Disimpan';
+    }
+
+    function saveProfile(e) {
+      e.preventDefault();
+      appState.profile = {
+        name: document.getElementById('profNamaUsaha').value.trim(),
+        owner: document.getElementById('profPemilik').value.trim(),
+        type: document.getElementById('profJenis').value,
+        startDate: document.getElementById('profMulai').value,
+        contact: document.getElementById('profKontak').value.trim(),
+        address: document.getElementById('profAlamat').value.trim(),
+        desc: document.getElementById('profDeskripsi').value.trim()
+      };
+      saveState();
+      updateGlobalUI();
+      renderProfile();
+      showToast('Profil bisnis berhasil disimpan!');
+    }
+
+    function resetProfileForm() {
+      document.getElementById('formProfil').reset();
+    }
+
+    // =========================================================================
+    // 3. INPUT TRANSAKSI, BIAYA & PRODUK
+    // =========================================================================
+    function switchInputTab(tab) {
+      ['sale', 'expense', 'products'].forEach(t => {
+        document.getElementById('inputTab' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = (t === tab) ? 'block' : 'none';
+        document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
+      });
+    }
+
+    function populateProductDatalists() {
+      const names = new Set(appState.products.map(p => p.name));
+      const cats = new Set(appState.products.map(p => p.category));
+      appState.transactions.forEach(t => { names.add(t.product); if (t.category) cats.add(t.category); });
+      document.getElementById('productDatalist').innerHTML = [...names].map(n => `<option value="${escapeHtml(n)}">`).join('');
+      document.getElementById('categoryDatalist').innerHTML = [...cats].map(c => `<option value="${escapeHtml(c)}">`).join('');
+    }
+
+    function autofillProductInfo() {
+      const name = document.getElementById('saleProduct').value.trim();
+      const found = appState.products.find(p => p.name.toLowerCase() === name.toLowerCase());
+      if (found) {
+        document.getElementById('saleCategory').value = found.category;
+        document.getElementById('salePrice').value = found.price;
+        document.getElementById('saleHpp').value = found.hpp;
+        updateSalePreview();
+      }
+    }
+
+    function updateSalePreview() {
+      const c = calcTx({
+        qty: document.getElementById('saleQty').value,
+        price: document.getElementById('salePrice').value,
+        hpp: document.getElementById('saleHpp').value,
+        discount: document.getElementById('saleDiscount').value,
+        extraCost: document.getElementById('saleExtraCost').value
+      });
+      document.getElementById('prevGross').textContent = formatRp(c.grossSales);
+      document.getElementById('prevDiscount').textContent = '- ' + formatRp(c.discount);
+      document.getElementById('prevOmzet').textContent = formatRp(c.omzet);
+      document.getElementById('prevHpp').textContent = formatRp(c.totalHpp);
+      document.getElementById('prevGrossProfit').textContent = formatRp(c.grossProfit);
+      document.getElementById('prevExtra').textContent = '- ' + formatRp(c.extraCost);
+      document.getElementById('prevNetProfit').textContent = formatRp(c.netTxProfit);
+    }
+
+    function saveSale(e) {
+      e.preventDefault();
+      const qty = Number(document.getElementById('saleQty').value);
+      const price = Number(document.getElementById('salePrice').value);
+      const hpp = Number(document.getElementById('saleHpp').value);
+      const discount = Number(document.getElementById('saleDiscount').value) || 0;
+      const extraCost = Number(document.getElementById('saleExtraCost').value) || 0;
+
+      if (qty <= 0 || price < 0 || hpp < 0 || discount < 0 || extraCost < 0) {
+        return showToast('Pastikan angka jumlah, harga, HPP, dan biaya valid.', true);
+      }
+      if (discount > qty * price) {
+        return showToast('Diskon tidak boleh melebihi total penjualan.', true);
+      }
+
+      const editId = document.getElementById('saleEditId').value;
+      const txObj = {
+        id: editId || genId(),
+        date: document.getElementById('saleDate').value,
+        product: document.getElementById('saleProduct').value.trim(),
+        category: document.getElementById('saleCategory').value.trim(),
+        qty, price, hpp, discount, extraCost,
+        payment: document.getElementById('salePayment').value,
+        customer: document.getElementById('saleCustomer').value.trim()
+      };
+
+      if (editId) {
+        const idx = appState.transactions.findIndex(t => t.id === editId);
+        if (idx !== -1) appState.transactions[idx] = txObj;
+        showToast('Transaksi berhasil diperbarui!');
+      } else {
+        appState.transactions.push(txObj);
+        showToast('Transaksi penjualan berhasil disimpan!');
+      }
+
+      saveState();
+      resetSaleForm();
+      populateProductDatalists();
+    }
+
+    function resetSaleForm() {
+      document.getElementById('formSale').reset();
+      document.getElementById('saleEditId').value = '';
+      document.getElementById('saleDate').value = todayISO();
+      document.getElementById('saleQty').value = 1;
+      document.getElementById('saleDiscount').value = 0;
+      document.getElementById('saleExtraCost').value = 0;
+      document.getElementById('saleFormTitle').textContent = 'Formulir Transaksi Penjualan';
+      document.getElementById('btnSaveSale').textContent = 'Simpan Transaksi';
+      updateSalePreview();
+    }
+
+    function editTransaction(id) {
+      const tx = appState.transactions.find(t => t.id === id);
+      if (!tx) return;
+      navigate('input');
+      switchInputTab('sale');
+      document.getElementById('saleEditId').value = tx.id;
+      document.getElementById('saleDate').value = tx.date;
+      document.getElementById('saleProduct').value = tx.product;
+      document.getElementById('saleCategory').value = tx.category;
+      document.getElementById('saleQty').value = tx.qty;
+      document.getElementById('salePrice').value = tx.price;
+      document.getElementById('saleHpp').value = tx.hpp;
+      document.getElementById('saleDiscount').value = tx.discount || 0;
+      document.getElementById('saleExtraCost').value = tx.extraCost || 0;
+      document.getElementById('salePayment').value = tx.payment || 'Tunai';
+      document.getElementById('saleCustomer').value = tx.customer || '';
+      document.getElementById('saleFormTitle').textContent = 'Edit Transaksi Penjualan';
+      document.getElementById('btnSaveSale').textContent = 'Update Transaksi';
+      updateSalePreview();
+    }
+
+    function deleteTransaction(id) {
+      if (!confirm('Hapus transaksi ini?')) return;
+      appState.transactions = appState.transactions.filter(t => t.id !== id);
+      saveState();
+      showToast('Transaksi dihapus.');
+      // Re-render active page
+      const active = document.querySelector('.nav-item.active');
+      if (active) navigate(active.dataset.page);
+    }
+
+    // Expenses
+    function saveExpense(e) {
+      e.preventDefault();
+      const amount = Number(document.getElementById('expAmount').value);
+      if (amount <= 0) return showToast('Nominal pengeluaran harus lebih dari 0.', true);
+      const editId = document.getElementById('expEditId').value;
+      const obj = {
+        id: editId || genId(),
+        date: document.getElementById('expDate').value,
+        category: document.getElementById('expCategory').value,
+        amount,
+        note: document.getElementById('expNote').value.trim()
+      };
+      if (editId) {
+        const idx = appState.expenses.findIndex(x => x.id === editId);
+        if (idx !== -1) appState.expenses[idx] = obj;
+        showToast('Pengeluaran diperbarui.');
+      } else {
+        appState.expenses.push(obj);
+        showToast('Biaya operasional berhasil dicatat!');
+      }
+      saveState();
+      resetExpenseForm();
+      renderExpenseTable();
+    }
+
+    function resetExpenseForm() {
+      document.getElementById('formExpense').reset();
+      document.getElementById('expEditId').value = '';
+      document.getElementById('expDate').value = todayISO();
+      document.getElementById('btnSaveExp').textContent = 'Simpan Pengeluaran';
+    }
+
+    function deleteExpense(id) {
+      if (!confirm('Hapus catatan pengeluaran ini?')) return;
+      appState.expenses = appState.expenses.filter(x => x.id !== id);
+      saveState();
+      renderExpenseTable();
+      showToast('Pengeluaran dihapus.');
+    }
+
+    function renderExpenseTable() {
+      const sorted = [...appState.expenses].sort((a, b) => b.date.localeCompare(a.date));
+      const total = sorted.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      document.getElementById('expTotalSubtitle').textContent = 'Total Pengeluaran Operasional: ' + formatRp(total);
+      document.getElementById('expenseTableBody').innerHTML = sorted.length ? sorted.map(e => `
+        <tr>
+          <td>${e.date}</td>
+          <td><span class="badge badge-peach">${escapeHtml(e.category)}</span></td>
+          <td>${escapeHtml(e.note || '-')}</td>
+          <td class="text-right"><strong>${formatRp(e.amount)}</strong></td>
+          <td class="text-center"><button class="btn btn-danger btn-sm" onclick="deleteExpense('${e.id}')">Hapus</button></td>
+        </tr>
+      `).join('') : '<tr><td colspan="5" class="text-center">Belum ada biaya operasional tercatat.</td></tr>';
+    }
+
+    // Products Catalog
+    function saveProduct(e) {
+      e.preventDefault();
+      const name = document.getElementById('prodName').value.trim();
+      const category = document.getElementById('prodCat').value.trim();
+      const price = Number(document.getElementById('prodPrice').value);
+      const hpp = Number(document.getElementById('prodHpp').value);
+      const existing = appState.products.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+      if (existing !== -1) appState.products[existing] = { name, category, price, hpp };
+      else appState.products.push({ name, category, price, hpp });
+      saveState();
+      document.getElementById('formProduct').reset();
+      renderProductCatalog();
+      populateProductDatalists();
+      showToast('Produk disimpan ke katalog.');
+    }
+
+    function deleteProduct(idx) {
+      appState.products.splice(idx, 1);
+      saveState();
+      renderProductCatalog();
+      populateProductDatalists();
+    }
+
+    function renderProductCatalog() {
+      document.getElementById('productCatalogBody').innerHTML = appState.products.length ? appState.products.map((p, i) => `
+        <tr>
+          <td><strong>${escapeHtml(p.name)}</strong></td>
+          <td>${escapeHtml(p.category)}</td>
+          <td class="text-right">${formatRp(p.price)}</td>
+          <td class="text-right">${formatRp(p.hpp)}</td>
+          <td class="text-center"><button class="btn btn-danger btn-sm" onclick="deleteProduct(${i})">Hapus</button></td>
+        </tr>
+      `).join('') : '<tr><td colspan="5" class="text-center">Belum ada produk di katalog.</td></tr>';
+    }
+
+    // =========================================================================
+    // 4. PENJUALAN HARIAN
+    // =========================================================================
+    function setDailyToday() {
+      document.getElementById('dailyDatePicker').value = todayISO();
+      renderDailyPage();
+    }
+
+    function quickAddForDailyDate() {
+      const d = document.getElementById('dailyDatePicker').value || todayISO();
+      navigate('input');
+      switchInputTab('sale');
+      document.getElementById('saleDate').value = d;
+    }
+
+    function renderDailyPage() {
+      const picker = document.getElementById('dailyDatePicker');
+      if (!picker.value) picker.value = todayISO();
+      const selDate = picker.value;
+      document.getElementById('dailyDateLabel').textContent = selDate;
+
+      const dayTxs = appState.transactions.filter(t => t.date === selDate);
+      let omzet = 0, hpp = 0, laba = 0;
+      dayTxs.forEach(t => { const c = calcTx(t); omzet += c.omzet; hpp += c.totalHpp; laba += c.netTxProfit; });
+
+      document.getElementById('dailyOmzet').textContent = formatRp(omzet);
+      document.getElementById('dailyHpp').textContent = formatRp(hpp);
+      document.getElementById('dailyLaba').textContent = formatRp(laba);
+      document.getElementById('dailyCount').textContent = dayTxs.length;
+
+      document.getElementById('dailyTxBody').innerHTML = dayTxs.length ? dayTxs.map((t, i) => {
+        const c = calcTx(t);
+        return `<tr>
+          <td>${i + 1}</td>
+          <td><strong>${escapeHtml(t.product)}</strong></td>
+          <td>${escapeHtml(t.category)}</td>
+          <td class="text-right">${t.qty}</td>
+          <td class="text-right">${formatRp(c.omzet)}</td>
+          <td class="text-right">${formatRp(c.totalHpp)}</td>
+          <td class="text-right">${formatRp(c.netTxProfit)}</td>
+          <td>${escapeHtml(t.payment)}</td>
+          <td class="text-center">
+            <button class="btn btn-outline btn-sm" onclick="editTransaction('${t.id}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteTransaction('${t.id}')">Hapus</button>
+          </td>
+        </tr>`;
+      }).join('') : '<tr><td colspan="9" class="text-center">Tidak ada transaksi pada tanggal ini.</td></tr>';
+
+      // Recap
+      const map = {};
+      appState.transactions.forEach(t => {
+        const c = calcTx(t);
+        if (!map[t.date]) map[t.date] = { count: 0, units: 0, omzet: 0, hpp: 0, laba: 0 };
+        map[t.date].count++;
+        map[t.date].units += Number(t.qty) || 0;
+        map[t.date].omzet += c.omzet;
+        map[t.date].hpp += c.totalHpp;
+        map[t.date].laba += c.netTxProfit;
+      });
+      const recapDates = Object.keys(map).sort().reverse().slice(0, 14);
+      document.getElementById('dailyRecapBody').innerHTML = recapDates.length ? recapDates.map(d => {
+        const r = map[d];
+        return `<tr style="cursor:pointer;" onclick="document.getElementById('dailyDatePicker').value='${d}';renderDailyPage();">
+          <td><strong>${d}</strong></td>
+          <td class="text-right">${r.count}</td>
+          <td class="text-right">${r.units}</td>
+          <td class="text-right">${formatRp(r.omzet)}</td>
+          <td class="text-right">${formatRp(r.hpp)}</td>
+          <td class="text-right">${formatRp(r.laba)}</td>
+        </tr>`;
+      }).join('') : '<tr><td colspan="6" class="text-center">Belum ada rekap harian.</td></tr>';
+    }
+
+    // =========================================================================
+    // 5. UPLOAD EXCEL / CSV
+    // =========================================================================
+    function downloadExcelTemplate() {
+      const rows = [
+        { Tanggal: todayISO(), 'Nama Produk': 'Es Kopi Susu', Kategori: 'Minuman', Jumlah: 5, 'Harga Jual': 22000, HPP: 9500, Diskon: 0, 'Biaya Tambahan': 2000, 'Metode Pembayaran': 'QRIS', Pelanggan: 'Budi' },
+        { Tanggal: todayISO(), 'Nama Produk': 'Roti Bakar', Kategori: 'Makanan', Jumlah: 3, 'Harga Jual': 18000, HPP: 8000, Diskon: 5000, 'Biaya Tambahan': 0, 'Metode Pembayaran': 'Tunai', Pelanggan: '' }
+      ];
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Template_Penjualan');
+      XLSX.writeFile(wb, 'Template_Business_Insight_AI.xlsx');
+      showToast('Template Excel berhasil diunduh.');
+    }
+
+    function resetUploadState() {
+      document.getElementById('excelFileInput').value = '';
+      uploadedRawRows = [];
+      uploadedHeaders = [];
+      validatedImportRows = [];
+      document.getElementById('uploadMappingSection').style.display = 'none';
+      document.getElementById('uploadPreviewSection').style.display = 'none';
+    }
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const wb = XLSX.read(data, { type: 'array' });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          if (!json.length) return showToast('File kosong atau tidak terbaca.', true);
+          uploadedRawRows = json;
+          uploadedHeaders = Object.keys(json[0]);
+          document.getElementById('uploadFileMeta').textContent = `File "${file.name}" terbaca (${json.length} baris).`;
+          buildColumnMappingUI();
+          document.getElementById('uploadMappingSection').style.display = 'block';
+          validateAndPreviewImport();
+        } catch (err) {
+          showToast('Gagal membaca file Excel/CSV. Pastikan format benar.', true);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    const mappingFields = [
+      { key: 'date', label: 'Tanggal *', hints: ['tanggal', 'date', 'tgl'] },
+      { key: 'product', label: 'Nama Produk *', hints: ['produk', 'product', 'nama produk', 'item', 'barang'] },
+      { key: 'category', label: 'Kategori', hints: ['kategori', 'category'] },
+      { key: 'qty', label: 'Jumlah *', hints: ['jumlah', 'qty', 'kuantitas', 'unit'] },
+      { key: 'price', label: 'Harga Jual *', hints: ['harga', 'price', 'harga jual'] },
+      { key: 'hpp', label: 'HPP / Modal *', hints: ['hpp', 'modal', 'cost'] },
+      { key: 'discount', label: 'Diskon', hints: ['diskon', 'discount'] },
+      { key: 'extraCost', label: 'Biaya Tambahan', hints: ['biaya', 'extra', 'ongkir'] },
+      { key: 'payment', label: 'Metode Pembayaran', hints: ['bayar', 'pembayaran', 'payment'] },
+      { key: 'customer', label: 'Pelanggan (Opsional)', hints: ['pelanggan', 'customer', 'pembeli'] }
+    ];
+
+    function buildColumnMappingUI() {
+      const grid = document.getElementById('columnMappingGrid');
+      grid.innerHTML = mappingFields.map(f => {
+        const autoMatch = uploadedHeaders.find(h => f.hints.some(hint => h.toLowerCase().includes(hint))) || '';
+        const opts = `<option value="">-- Tidak Dipetakan --</option>` + uploadedHeaders.map(h => `<option value="${escapeHtml(h)}" ${h === autoMatch ? 'selected' : ''}>${escapeHtml(h)}</option>`).join('');
+        return `<div class="form-group"><label>${f.label}</label><select id="map_${f.key}">${opts}</select></div>`;
+      }).join('');
+    }
+
+    function normalizeDateVal(val) {
+      if (typeof val === 'number') {
+        const d = XLSX.SSF.parse_date_code(val);
+        if (d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+      }
+      const s = String(val || '').trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const parsed = new Date(s);
+      if (!isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+      return '';
+    }
+
+    function validateAndPreviewImport() {
+      const map = {};
+      mappingFields.forEach(f => { map[f.key] = document.getElementById('map_' + f.key).value; });
+
+      const existingKeys = new Set(appState.transactions.map(t => `${t.date}|${t.product.toLowerCase()}|${t.qty}|${t.price}`));
+      const seenInFile = new Set();
+
+      validatedImportRows = [];
+      let validCount = 0, dupCount = 0, errCount = 0;
+
+      const previewHtml = uploadedRawRows.map((row, idx) => {
+        const date = normalizeDateVal(map.date ? row[map.date] : '');
+        const product = String(map.product ? row[map.product] : '').trim();
+        const category = String(map.category ? row[map.category] : 'Umum').trim() || 'Umum';
+        const qty = Number(map.qty ? row[map.qty] : 0);
+        const price = Number(map.price ? row[map.price] : -1);
+        const hpp = Number(map.hpp ? row[map.hpp] : 0);
+        const discount = Number(map.discount ? row[map.discount] : 0) || 0;
+        const extraCost = Number(map.extraCost ? row[map.extraCost] : 0) || 0;
+        const payment = String(map.payment ? row[map.payment] : 'Tunai').trim() || 'Tunai';
+        const customer = String(map.customer ? row[map.customer] : '').trim();
+
+        let status = 'valid', note = 'Siap diimpor';
+        if (!date || !product || qty <= 0 || isNaN(price) || price < 0 || isNaN(hpp) || hpp < 0) {
+          status = 'error';
+          note = 'Tanggal/Produk/Angka tidak valid';
+          errCount++;
+        } else {
+          const key = `${date}|${product.toLowerCase()}|${qty}|${price}`;
+          if (existingKeys.has(key) || seenInFile.has(key)) {
+            status = 'duplicate';
+            note = 'Terdeteksi duplikat (akan dilewati)';
+            dupCount++;
+          } else {
+            seenInFile.add(key);
+            validCount++;
+            validatedImportRows.push({ id: genId(), date, product, category, qty, price, hpp, discount, extraCost, payment, customer });
+          }
+        }
+        const badgeCls = status === 'valid' ? 'badge-success' : (status === 'duplicate' ? 'badge-warning' : 'badge-danger');
+        const c = calcTx({ qty, price, hpp, discount, extraCost });
+        return `<tr>
+          <td>${idx + 1}</td>
+          <td><span class="badge ${badgeCls}">${status.toUpperCase()}</span></td>
+          <td>${date || '-'}</td>
+          <td>${escapeHtml(product || '-')}</td>
+          <td>${qty || 0}</td>
+          <td class="text-right">${formatRp(price > 0 ? price : 0)}</td>
+          <td class="text-right">${formatRp(hpp > 0 ? hpp : 0)}</td>
+          <td class="text-right">${formatRp(c.omzet)}</td>
+          <td>${note}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('uploadValidationSummary').textContent = `Valid: ${validCount} baris | Duplikat: ${dupCount} baris | Error: ${errCount} baris`;
+      document.getElementById('uploadPreviewBody').innerHTML = previewHtml;
+      document.getElementById('btnConfirmImport').disabled = validCount === 0;
+      document.getElementById('uploadPreviewSection').style.display = 'block';
+    }
+
+    function confirmImportData() {
+      if (!validatedImportRows.length) return;
+      if (!confirm(`Impor ${validatedImportRows.length} transaksi valid ke sistem?`)) return;
+      appState.transactions.push(...validatedImportRows);
+      saveState();
+      showToast(`${validatedImportRows.length} transaksi berhasil diimpor!`);
+      resetUploadState();
+      navigate('dashboard');
+    }
+
+    // =========================================================================
+    // 6. RIWAYAT TRANSAKSI
+    // =========================================================================
+    function populateHistoryFilters() {
+      const sel = document.getElementById('histCategory');
+      const cur = sel.value;
+      const cats = [...new Set(appState.transactions.map(t => t.category).filter(Boolean))].sort();
+      sel.innerHTML = '<option value="">Semua Kategori</option>' + cats.map(c => `<option value="${escapeHtml(c)}" ${c === cur ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
+    }
+
+    function resetHistoryFilters() {
+      document.getElementById('histSearch').value = '';
+      document.getElementById('histCategory').value = '';
+      document.getElementById('histStart').value = '';
+      document.getElementById('histEnd').value = '';
+      document.getElementById('histSort').value = 'date_desc';
+      renderHistory(1);
+    }
+
+    function renderHistory(page = 1) {
+      currentHistPage = page;
+      const q = document.getElementById('histSearch').value.trim().toLowerCase();
+      const cat = document.getElementById('histCategory').value;
+      const start = document.getElementById('histStart').value;
+      const end = document.getElementById('histEnd').value;
+      const sort = document.getElementById('histSort').value;
+
+      let list = appState.transactions.filter(t => {
+        if (q && !t.product.toLowerCase().includes(q) && !(t.customer || '').toLowerCase().includes(q)) return false;
+        if (cat && t.category !== cat) return false;
+        if (start && t.date < start) return false;
+        if (end && t.date > end) return false;
+        return true;
+      });
+
+      list.sort((a, b) => {
+        const ca = calcTx(a), cb = calcTx(b);
+        if (sort === 'date_desc') return b.date.localeCompare(a.date);
+        if (sort === 'date_asc') return a.date.localeCompare(b.date);
+        if (sort === 'omzet_desc') return cb.omzet - ca.omzet;
+        if (sort === 'laba_desc') return cb.netTxProfit - ca.netTxProfit;
+        if (sort === 'qty_desc') return b.qty - a.qty;
+        return 0;
+      });
+
+      let totOmzet = 0, totLaba = 0;
+      list.forEach(t => { const c = calcTx(t); totOmzet += c.omzet; totLaba += c.netTxProfit; });
+      document.getElementById('histTotalOmzet').textContent = formatRp(totOmzet);
+      document.getElementById('histTotalLaba').textContent = formatRp(totLaba);
+      document.getElementById('histTotalCount').textContent = list.length;
+
+      const totalPages = Math.max(1, Math.ceil(list.length / HIST_PER_PAGE));
+      if (currentHistPage > totalPages) currentHistPage = totalPages;
+      const startIdx = (currentHistPage - 1) * HIST_PER_PAGE;
+      const slice = list.slice(startIdx, startIdx + HIST_PER_PAGE);
+
+      document.getElementById('historyTableBody').innerHTML = slice.length ? slice.map((t, i) => {
+        const c = calcTx(t);
+        return `<tr>
+          <td>${startIdx + i + 1}</td>
+          <td>${t.date}</td>
+          <td><strong>${escapeHtml(t.product)}</strong><br><span style="font-size:11px;color:var(--olive-muted);">${escapeHtml(t.category)}</span></td>
+          <td class="text-right">${t.qty}</td>
+          <td class="text-right">${formatRp(t.price)}</td>
+          <td class="text-right">${formatRp(c.totalHpp)}</td>
+          <td class="text-right"><strong>${formatRp(c.omzet)}</strong></td>
+          <td class="text-right">${formatRp(c.netTxProfit)}</td>
+          <td>${escapeHtml(t.payment)}</td>
+          <td class="text-center" style="white-space:nowrap;">
+            <button class="btn btn-outline btn-sm" onclick="editTransaction('${t.id}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteTransaction('${t.id}')">Hapus</button>
+          </td>
+        </tr>`;
+      }).join('') : '<tr><td colspan="10" class="text-center">Tidak ada transaksi ditemukan.</td></tr>';
+
+      document.getElementById('historyPagination').innerHTML = `
+        <span>Menampilkan ${slice.length} dari ${list.length} transaksi (Halaman ${currentHistPage}/${totalPages})</span>
+        <div class="page-btns">
+          <button class="btn btn-outline btn-sm" ${currentHistPage <= 1 ? 'disabled' : ''} onclick="renderHistory(${currentHistPage - 1})">Sebelumnya</button>
+          <button class="btn btn-outline btn-sm" ${currentHistPage >= totalPages ? 'disabled' : ''} onclick="renderHistory(${currentHistPage + 1})">Berikutnya</button>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 7. ANALISIS PENJUALAN
+    // =========================================================================
+    function setSalesGranularity(g) {
+      currentSalesGranularity = g;
+      document.querySelectorAll('#salesGranularityPills .pill').forEach(p => p.classList.toggle('active', p.dataset.g === g));
+      renderSalesAnalysis();
+    }
+
+    function getBucketKey(dateStr, g) {
+      if (g === 'daily') return dateStr;
+      if (g === 'monthly') return dateStr.slice(0, 7);
+      if (g === 'yearly') return dateStr.slice(0, 4);
+      // weekly
+      const d = new Date(dateStr + 'T00:00:00');
+      const day = d.getDay() || 7;
+      d.setDate(d.getDate() - day + 1);
+      return 'Minggu ' + d.toISOString().slice(0, 10);
+    }
+
+    function renderSalesAnalysis() {
+      const txs = appState.transactions;
+      let totalOmzet = 0, totalUnits = 0;
+      const buckets = {};
+      txs.forEach(t => {
+        const c = calcTx(t);
+        totalOmzet += c.omzet;
+        totalUnits += Number(t.qty) || 0;
+        const k = getBucketKey(t.date, currentSalesGranularity);
+        buckets[k] = (buckets[k] || 0) + c.omzet;
+      });
+      document.getElementById('asOmzet').textContent = formatRp(totalOmzet);
+      document.getElementById('asCount').textContent = txs.length;
+      document.getElementById('asUnits').textContent = totalUnits + ' unit';
+      document.getElementById('asAvg').textContent = formatRp(txs.length ? totalOmzet / txs.length : 0);
+
+      const keys = Object.keys(buckets).sort();
+      destroyChart('salesAnalysis');
+      charts.salesAnalysis = new Chart(document.getElementById('chartSalesAnalysis'), {
+        type: 'line',
+        data: {
+          labels: keys.length ? keys : ['Belum ada data'],
+          datasets: [{
+            label: 'Omzet (Rp)',
+            data: keys.length ? keys.map(k => buckets[k]) : [0],
+            borderColor: '#465442',
+            backgroundColor: 'rgba(183, 201, 168, 0.45)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      if (!keys.length) {
+        document.getElementById('asHighLow').innerHTML = '<p style="font-size:13px;color:var(--olive-muted);">Belum ada data penjualan.</p>';
+        document.getElementById('asComparison').innerHTML = '<p style="font-size:13px;color:var(--olive-muted);">Tambahkan transaksi untuk melihat perbandingan antarperiode.</p>';
+        return;
+      }
+
+      const sortedVal = [...keys].sort((a, b) => buckets[b] - buckets[a]);
+      const highest = sortedVal[0], lowest = sortedVal[sortedVal.length - 1];
+      document.getElementById('asHighLow').innerHTML = `
+        <div class="insight-item sage"><h4>Periode Tertinggi: ${highest}</h4><p>Total omzet mencapai <strong>${formatRp(buckets[highest])}</strong>.</p></div>
+        <div class="insight-item peach"><h4>Periode Terendah: ${lowest}</h4><p>Total omzet sebesar <strong>${formatRp(buckets[lowest])}</strong>.</p></div>
+      `;
+
+      if (keys.length >= 2) {
+        const last = keys[keys.length - 1], prev = keys[keys.length - 2];
+        const diff = buckets[last] - buckets[prev];
+        const pct = buckets[prev] > 0 ? (diff / buckets[prev]) * 100 : 0;
+        const arah = diff >= 0 ? 'meningkat' : 'menurun';
+        document.getElementById('asComparison').innerHTML = `
+          <div class="insight-item lilac">
+            <h4>Perbandingan ${last} vs ${prev}</h4>
+            <p>Omzet periode terakhir (${formatRp(buckets[last])}) <strong>${arah} ${Math.abs(pct).toFixed(1)}%</strong> (${formatRp(Math.abs(diff))}) dibandingkan periode sebelumnya (${formatRp(buckets[prev])}).</p>
+          </div>`;
+      } else {
+        document.getElementById('asComparison').innerHTML = '<p style="font-size:13px;color:var(--olive-muted);">Butuh minimal 2 periode berbeda untuk perbandingan antarperiode.</p>';
+      }
+    }
+
+    // =========================================================================
+    // 8. ANALISIS PRODUK
+    // =========================================================================
+    function renderProductAnalysis() {
+      const txs = appState.transactions;
+      const map = {};
+      let grandOmzet = 0;
+      txs.forEach(t => {
+        const c = calcTx(t);
+        grandOmzet += c.omzet;
+        if (!map[t.product]) map[t.product] = { category: t.category, qty: 0, omzet: 0, hpp: 0, laba: 0 };
+        map[t.product].qty += Number(t.qty) || 0;
+        map[t.product].omzet += c.omzet;
+        map[t.product].hpp += c.totalHpp;
+        map[t.product].laba += c.netTxProfit;
+      });
+      const list = Object.entries(map).map(([name, v]) => ({ name, ...v, share: grandOmzet > 0 ? (v.omzet / grandOmzet) * 100 : 0 }));
+
+      if (!list.length) {
+        ['apBestSeller', 'apMostProfit', 'apLowest'].forEach(id => document.getElementById(id).textContent = '-');
+        document.getElementById('apTableBody').innerHTML = '<tr><td colspan="7" class="text-center">Belum ada data produk.</td></tr>';
+        document.getElementById('apRecommendations').innerHTML = '<p style="font-size:13px;color:var(--olive-muted);">Catat transaksi untuk melihat rekomendasi produk.</p>';
+        destroyChart('productAnalysis');
+        return;
+      }
+
+      const byQty = [...list].sort((a, b) => b.qty - a.qty);
+      const byProfit = [...list].sort((a, b) => b.laba - a.laba);
+      const best = byQty[0], mostProfit = byProfit[0], lowest = byQty[byQty.length - 1];
+
+      document.getElementById('apBestSeller').textContent = best.name;
+      document.getElementById('apBestSellerMeta').textContent = `${best.qty} unit terjual (${formatRp(best.omzet)})`;
+      document.getElementById('apMostProfit').textContent = mostProfit.name;
+      document.getElementById('apMostProfitMeta').textContent = `Total laba: ${formatRp(mostProfit.laba)}`;
+      document.getElementById('apLowest').textContent = lowest.name;
+      document.getElementById('apLowestMeta').textContent = `${lowest.qty} unit terjual (${formatRp(lowest.omzet)})`;
+
+      const top10 = [...list].sort((a, b) => b.omzet - a.omzet).slice(0, 10);
+      destroyChart('productAnalysis');
+      charts.productAnalysis = new Chart(document.getElementById('chartProductAnalysis'), {
+        type: 'bar',
+        data: {
+          labels: top10.map(p => p.name),
+          datasets: [
+            { label: 'Omzet', data: top10.map(p => p.omzet), backgroundColor: '#B7C9A8', borderRadius: 6 },
+            { label: 'Laba', data: top10.map(p => p.laba), backgroundColor: '#D8C5E8', borderRadius: 6 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      document.getElementById('apRecommendations').innerHTML = `
+        <div class="insight-item sage"><h4>Pertahankan & Jaga Stok: ${escapeHtml(best.name)}</h4><p>Produk terlaris dengan ${best.qty} unit terjual (${best.share.toFixed(1)}% dari total omzet). Pastikan ketersediaan bahan baku selalu aman.</p></div>
+        <div class="insight-item lilac"><h4>Fokus Promosi: ${escapeHtml(mostProfit.name)}</h4><p>Menyumbang laba tertinggi sebesar ${formatRp(mostProfit.laba)}. Cocok dijadikan produk unggulan atau paket bundling.</p></div>
+        <div class="insight-item peach"><h4>Evaluasi Produk: ${escapeHtml(lowest.name)}</h4><p>Penjualan paling rendah (${lowest.qty} unit). Pertimbangkan promo diskon, perbaikan tampilan, atau evaluasi harga jual.</p></div>
+      `;
+
+      document.getElementById('apTableBody').innerHTML = list.sort((a, b) => b.omzet - a.omzet).map(p => `
+        <tr>
+          <td><strong>${escapeHtml(p.name)}</strong></td>
+          <td>${escapeHtml(p.category)}</td>
+          <td class="text-right">${p.qty}</td>
+          <td class="text-right">${formatRp(p.omzet)}</td>
+          <td class="text-right">${formatRp(p.hpp)}</td>
+          <td class="text-right"><strong>${formatRp(p.laba)}</strong></td>
+          <td class="text-right">${p.share.toFixed(1)}%</td>
+        </tr>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 9. ANALISIS KEUANGAN
+    // =========================================================================
+    function renderFinancialAnalysis() {
+      const txs = appState.transactions;
+      const exps = appState.expenses;
+      let omzet = 0, hpp = 0, extra = 0;
+      txs.forEach(t => { const c = calcTx(t); omzet += c.omzet; hpp += c.totalHpp; extra += c.extraCost; });
+      const opex = exps.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      const grossProfit = omzet - hpp;
+      const netProfit = grossProfit - extra - opex;
+      const margin = omzet > 0 ? (netProfit / omzet) * 100 : 0;
+      const totalExp = hpp + extra + opex;
+
+      const warn = document.getElementById('finWarningBanner');
+      if (exps.length === 0) {
+        warn.style.display = 'block';
+        warn.innerHTML = '<strong>Keterangan Data:</strong> Anda belum mencatat biaya operasional (sewa, listrik, gaji, dll). Angka laba bersih di bawah ini baru dihitung berdasarkan HPP dan biaya tambahan transaksi yang tersedia.';
+      } else {
+        warn.style.display = 'none';
+      }
+
+      document.getElementById('finOmzet').textContent = formatRp(omzet);
+      document.getElementById('finHpp').textContent = formatRp(hpp);
+      document.getElementById('finGrossProfit').textContent = formatRp(grossProfit);
+      document.getElementById('finNetProfit').textContent = formatRp(netProfit);
+      document.getElementById('finMargin').textContent = `Margin Laba Bersih: ${margin.toFixed(1)}%`;
+      document.getElementById('finOpEx').textContent = formatRp(opex + extra);
+      document.getElementById('finOpExMeta').textContent = `Operasional: ${formatRp(opex)} | Biaya Tambahan: ${formatRp(extra)}`;
+      document.getElementById('finTotalExp').textContent = formatRp(totalExp);
+
+      // Pie Chart Komposisi Pengeluaran
+      const expCatMap = { 'HPP (Modal Produk)': hpp };
+      if (extra > 0) expCatMap['Biaya Tambahan Transaksi'] = extra;
+      exps.forEach(e => { expCatMap[e.category] = (expCatMap[e.category] || 0) + (Number(e.amount) || 0); });
+      const pieLabels = Object.keys(expCatMap).filter(k => expCatMap[k] > 0);
+      const pieData = pieLabels.map(k => expCatMap[k]);
+
+      destroyChart('finPie');
+      charts.finPie = new Chart(document.getElementById('chartFinExpensePie'), {
+        type: 'doughnut',
+        data: {
+          labels: pieLabels.length ? pieLabels : ['Belum ada pengeluaran'],
+          datasets: [{ data: pieData.length ? pieData : [1], backgroundColor: ['#F6C6A8', '#D8C5E8', '#B7C9A8', '#E5B293', '#C4AED9', '#9DB48C', '#465442'] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // Monthly Profit Trend
+      const mMap = {};
+      txs.forEach(t => {
+        const m = t.date.slice(0, 7);
+        if (!mMap[m]) mMap[m] = { omzet: 0, hpp: 0, extra: 0, opex: 0 };
+        const c = calcTx(t);
+        mMap[m].omzet += c.omzet; mMap[m].hpp += c.totalHpp; mMap[m].extra += c.extraCost;
+      });
+      exps.forEach(e => {
+        const m = e.date.slice(0, 7);
+        if (!mMap[m]) mMap[m] = { omzet: 0, hpp: 0, extra: 0, opex: 0 };
+        mMap[m].opex += Number(e.amount) || 0;
+      });
+      const months = Object.keys(mMap).sort();
+
+      destroyChart('finTrend');
+      charts.finTrend = new Chart(document.getElementById('chartFinProfitTrend'), {
+        type: 'bar',
+        data: {
+          labels: months.length ? months : ['Belum ada data'],
+          datasets: [
+            { label: 'Laba Kotor', data: months.length ? months.map(m => mMap[m].omzet - mMap[m].hpp) : [0], backgroundColor: '#B7C9A8', borderRadius: 6 },
+            { label: 'Laba Bersih', data: months.length ? months.map(m => mMap[m].omzet - mMap[m].hpp - mMap[m].extra - mMap[m].opex) : [0], backgroundColor: '#D8C5E8', borderRadius: 6 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      document.getElementById('finSummaryTable').innerHTML = `
+        <div class="calc-preview">
+          <div class="calc-row"><span>Total Pendapatan / Omzet Bersih</span><strong>${formatRp(omzet)}</strong></div>
+          <div class="calc-row"><span>Harga Pokok Penjualan (HPP)</span><strong>- ${formatRp(hpp)}</strong></div>
+          <div class="calc-row"><span>Laba Kotor</span><strong>${formatRp(grossProfit)}</strong></div>
+          <div class="calc-row"><span>Biaya Tambahan Transaksi</span><strong>- ${formatRp(extra)}</strong></div>
+          <div class="calc-row"><span>Biaya Operasional Tercatat</span><strong>- ${formatRp(opex)}</strong></div>
+          <div class="calc-row"><span>Laba Bersih (${margin.toFixed(1)}%)</span><strong>${formatRp(netProfit)}</strong></div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 10. ANALISIS PELANGGAN
+    // =========================================================================
+    function renderCustomerAnalysis() {
+      const txs = appState.transactions.filter(t => t.customer && t.customer.trim() !== '');
+      if (!txs.length) {
+        document.getElementById('custNoData').style.display = 'block';
+        document.getElementById('custContent').style.display = 'none';
+        return;
+      }
+      document.getElementById('custNoData').style.display = 'none';
+      document.getElementById('custContent').style.display = 'block';
+
+      const map = {};
+      txs.forEach(t => {
+        const key = t.customer.trim();
+        const c = calcTx(t);
+        if (!map[key]) map[key] = { count: 0, spend: 0, prods: {} };
+        map[key].count++;
+        map[key].spend += c.omzet;
+        map[key].prods[t.product] = (map[key].prods[t.product] || 0) + Number(t.qty);
+      });
+      const list = Object.entries(map).map(([name, v]) => {
+        const fav = Object.entries(v.prods).sort((a, b) => b[1] - a[1])[0][0];
+        return { name, count: v.count, spend: v.spend, avg: v.spend / v.count, fav };
+      }).sort((a, b) => b.spend - a.spend);
+
+      const repeat = list.filter(c => c.count > 1).length;
+      const totalSpend = list.reduce((s, c) => s + c.spend, 0);
+      const totalFreq = list.reduce((s, c) => s + c.count, 0);
+
+      document.getElementById('custTotal').textContent = list.length;
+      document.getElementById('custRepeat').textContent = repeat;
+      document.getElementById('custRepeatPct').textContent = `${((repeat / list.length) * 100).toFixed(0)}% dari total pelanggan`;
+      document.getElementById('custFreq').textContent = (totalFreq / list.length).toFixed(1) + 'x';
+      document.getElementById('custAvgSpend').textContent = formatRp(totalSpend / list.length);
+
+      document.getElementById('custTableBody').innerHTML = list.map(c => `
+        <tr>
+          <td><strong>${escapeHtml(c.name)}</strong></td>
+          <td class="text-right">${c.count}x</td>
+          <td class="text-right"><strong>${formatRp(c.spend)}</strong></td>
+          <td class="text-right">${formatRp(c.avg)}</td>
+          <td>${escapeHtml(c.fav)}</td>
+          <td><span class="badge ${c.count > 1 ? 'badge-sage' : 'badge-lilac'}">${c.count > 1 ? 'Repeat' : 'Baru'}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 11. PREDIKSI PENJUALAN (LINEAR REGRESSION)
+    // =========================================================================
+    function linearRegression(yVals) {
+      const n = yVals.length;
+      let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+      for (let i = 0; i < n; i++) {
+        sumX += i; sumY += yVals[i]; sumXY += i * yVals[i]; sumXX += i * i;
+      }
+      const denom = (n * sumXX - sumX * sumX);
+      const slope = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
+      const intercept = (sumY - slope * sumX) / n;
+      return { slope, intercept, predict: x => Math.max(0, intercept + slope * x) };
+    }
+
+    function renderForecast() {
+      const mMap = {};
+      appState.transactions.forEach(t => {
+        const m = t.date.slice(0, 7);
+        const c = calcTx(t);
+        if (!mMap[m]) mMap[m] = { omzet: 0, units: 0, hpp: 0, extra: 0 };
+        mMap[m].omzet += c.omzet;
+        mMap[m].units += Number(t.qty) || 0;
+        mMap[m].hpp += c.totalHpp;
+        mMap[m].extra += c.extraCost;
+      });
+      const months = Object.keys(mMap).sort();
+
+      if (months.length < 2) {
+        document.getElementById('forecastInsufficient').style.display = 'block';
+        document.getElementById('forecastContent').style.display = 'none';
+        return;
+      }
+      document.getElementById('forecastInsufficient').style.display = 'none';
+      document.getElementById('forecastContent').style.display = 'block';
+
+      const omzetSeries = months.map(m => mMap[m].omzet);
+      const unitSeries = months.map(m => mMap[m].units);
+      const regOmzet = linearRegression(omzetSeries);
+      const regUnits = linearRegression(unitSeries);
+
+      const nextOmzet = regOmzet.predict(months.length);
+      const nextUnits = Math.round(regUnits.predict(months.length));
+
+      // Estimate average margin from historical data
+      const totOmzet = omzetSeries.reduce((a, b) => a + b, 0);
+      const totHpp = months.reduce((s, m) => s + mMap[m].hpp + mMap[m].extra, 0);
+      const totOpEx = appState.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      const avgMonthlyOpEx = totOpEx / months.length;
+      const grossRatio = totOmzet > 0 ? (totOmzet - totHpp) / totOmzet : 0;
+      const estNetProfit = (nextOmzet * grossRatio) - avgMonthlyOpEx;
+
+      const trendText = regOmzet.slope > 0 ? 'Tren Naik' : (regOmzet.slope < 0 ? 'Tren Menurun' : 'Stabil');
+
+      document.getElementById('fcOmzet').textContent = formatRp(nextOmzet);
+      document.getElementById('fcUnits').textContent = nextUnits + ' unit';
+      document.getElementById('fcProfit').textContent = formatRp(estNetProfit);
+      document.getElementById('fcTrend').textContent = trendText;
+      document.getElementById('fcMethodExplain').textContent = `Dihitung dari ${months.length} bulan data historis (${months[0]} s/d ${months[months.length - 1]}).`;
+
+      const labels = [...months, 'Prediksi Bulan Depan'];
+      destroyChart('forecast');
+      charts.forecast = new Chart(document.getElementById('chartForecast'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Omzet Aktual', data: [...omzetSeries, null], borderColor: '#465442', backgroundColor: '#B7C9A8', tension: 0.3 },
+            { label: 'Estimasi Prediksi', data: [...months.map((_, i) => i === months.length - 1 ? omzetSeries[i] : null), nextOmzet], borderColor: '#D8C5E8', borderDash: [6, 6], backgroundColor: '#D8C5E8', tension: 0.3 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // =========================================================================
+    // 12. AI BUSINESS ASSISTANT (LOCAL DATA-DRIVEN)
+    // =========================================================================
+    function renderChat() {
+      const box = document.getElementById('chatMessages');
+      if (!appState.chatHistory.length) {
+        appState.chatHistory.push({
+          role: 'bot',
+          text: 'Halo! Saya AI Business Assistant (Analisis Otomatis Lokal).\nSilakan tanyakan kondisi keuangan, produk terlaris, pengeluaran, atau saran pengembangan bisnis berdasarkan data yang sudah Anda masukkan.'
+        });
+      }
+      box.innerHTML = appState.chatHistory.map(m => `<div class="chat-bubble ${m.role === 'user' ? 'chat-user' : 'chat-bot'}">${escapeHtml(m.text)}</div>`).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function clearChatHistory() {
+      appState.chatHistory = [];
+      saveState();
+      renderChat();
+    }
+
+    function handleChatSubmit(e) {
+      e.preventDefault();
+      const inp = document.getElementById('chatInput');
+      const q = inp.value.trim();
+      if (!q) return;
+      inp.value = '';
+      askAssistant(q);
+    }
+
+    function askAssistant(question) {
+      appState.chatHistory.push({ role: 'user', text: question });
+      const answer = generateLocalAssistantAnswer(question);
+      appState.chatHistory.push({ role: 'bot', text: answer });
+      saveState();
+      renderChat();
+    }
+
+    function generateLocalAssistantAnswer(q) {
+      const txs = appState.transactions;
+      const exps = appState.expenses;
+      const lower = q.toLowerCase();
+
+      if (!txs.length) {
+        return '[Analisis Lokal] Data transaksi Anda masih kosong. Silakan catat transaksi penjualan terlebih dahulu atau muat data contoh agar saya dapat menganalisis bisnis Anda secara akurat.';
+      }
+
+      let omzet = 0, hpp = 0, extra = 0, units = 0;
+      const prodMap = {};
+      txs.forEach(t => {
+        const c = calcTx(t);
+        omzet += c.omzet; hpp += c.totalHpp; extra += c.extraCost; units += Number(t.qty) || 0;
+        if (!prodMap[t.product]) prodMap[t.product] = { qty: 0, omzet: 0, laba: 0 };
+        prodMap[t.product].qty += Number(t.qty) || 0;
+        prodMap[t.product].omzet += c.omzet;
+        prodMap[t.product].laba += c.netTxProfit;
+      });
+      const opex = exps.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      const labaKotor = omzet - hpp;
+      const labaBersih = labaKotor - extra - opex;
+      const margin = omzet > 0 ? (labaBersih / omzet) * 100 : 0;
+      const prods = Object.entries(prodMap);
+      const topProfit = [...prods].sort((a, b) => b[1].laba - a[1].laba)[0];
+      const topQty = [...prods].sort((a, b) => b[1].qty - a[1].qty)[0];
+      const lowQty = [...prods].sort((a, b) => a[1].qty - b[1].qty)[0];
+
+      if (lower.includes('menguntungkan') || lower.includes('untung') || lower.includes('terlaris')) {
+        return `[Analisis Lokal]\n• Produk paling menguntungkan: ${topProfit[0]} dengan total laba ${formatRp(topProfit[1].laba)} (${topProfit[1].qty} unit terjual).\n• Produk paling laris (unit): ${topQty[0]} sebanyak ${topQty[1].qty} unit (omzet ${formatRp(topQty[1].omzet)}).\nSaran: Fokuskan promosi dan jaga ketersediaan stok untuk produk ini.`;
+      }
+      if (lower.includes('pengeluaran') || lower.includes('biaya')) {
+        const topExpCat = {};
+        exps.forEach(e => topExpCat[e.category] = (topExpCat[e.category] || 0) + Number(e.amount));
+        const maxExp = Object.entries(topExpCat).sort((a, b) => b[1] - a[1])[0];
+        return `[Analisis Lokal]\nTotal pengeluaran tercatat sebesar ${formatRp(hpp + extra + opex)}, terdiri dari:\n• HPP (Modal Produk): ${formatRp(hpp)}\n• Biaya Operasional: ${formatRp(opex)}\n• Biaya Tambahan Transaksi: ${formatRp(extra)}\n${maxExp ? `Pos operasional terbesar adalah "${maxExp[0]}" sebesar ${formatRp(maxExp[1])}.` : 'Anda belum mencatat biaya operasional rutin (sewa, listrik, gaji).'}`;
+      }
+      if (lower.includes('rendah') || lower.includes('kurang laku') || lower.includes('sepi')) {
+        return `[Analisis Lokal]\nProduk dengan penjualan terendah saat ini adalah "${lowQty[0]}" (${lowQty[1].qty} unit, omzet ${formatRp(lowQty[1].omzet)}).\nSaran: Pertimbangkan bundling dengan produk terlaris (${topQty[0]}) atau evaluasi harga/kualitas produk.`;
+      }
+      if (lower.includes('laba') && (lower.includes('menurun') || lower.includes('turun') || lower.includes('evaluasi'))) {
+        return `[Analisis Lokal]\nSaat ini margin laba bersih Anda berada di ${margin.toFixed(1)}% (Laba Bersih ${formatRp(labaBersih)} dari Omzet ${formatRp(omzet)}).\nFaktor utama yang menekan laba biasanya adalah:\n1. Rasio HPP terhadap omzet: ${omzet > 0 ? ((hpp / omzet) * 100).toFixed(1) : 0}%.\n2. Biaya operasional tercatat: ${formatRp(opex)}.\nEvaluasi efisiensi bahan baku dan pos pengeluaran terbesar untuk menjaga margin di atas 20%.`;
+      }
+      if (lower.includes('tingkatkan omzet') || lower.includes('naikkan')) {
+        return `[Analisis Lokal]\nBerdasarkan data Anda (rata-rata nilai transaksi ${formatRp(omzet / txs.length)}):\n1. Buat paket bundling antara "${topQty[0]}" (terlaris) dan "${lowQty[0]}" (penjualan rendah) untuk menaikkan nilai per struk.\n2. Fokus promosikan "${topProfit[0]}" karena memberikan margin laba tertinggi.\n3. Catat nama pelanggan saat transaksi agar Anda bisa membuat program promo khusus pelanggan tetap.`;
+      }
+
+      return `[Analisis Lokal - Ringkasan Bisnis Anda]\n• Total Omzet: ${formatRp(omzet)} (${txs.length} transaksi, ${units} unit)\n• Total HPP: ${formatRp(hpp)}\n• Biaya Operasional & Tambahan: ${formatRp(opex + extra)}\n• Laba Bersih: ${formatRp(labaBersih)} (Margin ${margin.toFixed(1)}%)\n• Produk Terlaris: ${topQty[0]} (${topQty[1].qty} unit)\nSilakan tanyakan detail lebih lanjut tentang produk, pengeluaran, atau strategi omzet.`;
+    }
+
+    // =========================================================================
+    // 13. INSIGHT & REKOMENDASI OTOMATIS
+    // =========================================================================
+    function generateBusinessInsights(txs, exps) {
+      if (!txs.length) {
+        return [{ tone: 'sage', title: 'Mulai Catat Transaksi', body: 'Belum ada data transaksi pada periode ini. Catat penjualan pertama Anda agar sistem dapat memberikan insight dan rekomendasi bisnis.' }];
+      }
+      let omzet = 0, hpp = 0, extra = 0;
+      const prodMap = {};
+      txs.forEach(t => {
+        const c = calcTx(t);
+        omzet += c.omzet; hpp += c.totalHpp; extra += c.extraCost;
+        if (!prodMap[t.product]) prodMap[t.product] = { qty: 0, omzet: 0, laba: 0 };
+        prodMap[t.product].qty += Number(t.qty) || 0;
+        prodMap[t.product].omzet += c.omzet;
+        prodMap[t.product].laba += c.netTxProfit;
+      });
+      const opex = exps.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      const labaBersih = omzet - hpp - extra - opex;
+      const margin = omzet > 0 ? (labaBersih / omzet) * 100 : 0;
+      const prods = Object.entries(prodMap);
+      const bestQty = [...prods].sort((a, b) => b[1].qty - a[1].qty)[0];
+      const bestProfit = [...prods].sort((a, b) => b[1].laba - a[1].laba)[0];
+      const worstQty = [...prods].sort((a, b) => a[1].qty - b[1].qty)[0];
+
+      const list = [];
+      list.push({
+        tone: 'sage',
+        title: `Produk Terlaris: ${bestQty[0]}`,
+        body: `Terjual sebanyak ${bestQty[1].qty} unit dengan omzet ${formatRp(bestQty[1].omzet)}. Pastikan stok bahan baku untuk produk ini selalu diprioritaskan.`
+      });
+      list.push({
+        tone: 'lilac',
+        title: `Penyumbang Laba Tertinggi: ${bestProfit[0]}`,
+        body: `Menghasilkan laba transaksi sebesar ${formatRp(bestProfit[1].laba)}. Tingkatkan visibilitas produk ini di etalase atau media sosial Anda.`
+      });
+      if (margin < 15) {
+        list.push({
+          tone: 'peach',
+          title: `Perhatian: Margin Laba Bersih Rendah (${margin.toFixed(1)}%)`,
+          body: `Laba bersih tercatat ${formatRp(labaBersih)} dari omzet ${formatRp(omzet)}. Evaluasi HPP (${formatRp(hpp)}) dan biaya operasional (${formatRp(opex)}) untuk meningkatkan efisiensi.`
+        });
+      } else {
+        list.push({
+          tone: 'sage',
+          title: `Margin Laba Sehat (${margin.toFixed(1)}%)`,
+          body: `Usaha Anda mencatat laba bersih ${formatRp(labaBersih)} dari omzet ${formatRp(omzet)}. Pertahankan kontrol biaya dan alokasikan sebagian laba untuk pengembangan usaha.`
+        });
+      }
+      if (prods.length > 1) {
+        list.push({
+          tone: 'peach',
+          title: `Produk Perlu Evaluasi: ${worstQty[0]}`,
+          body: `Hanya terjual ${worstQty[1].qty} unit (${formatRp(worstQty[1].omzet)}). Pertimbangkan promo paket bundling bersama ${bestQty[0]}.`
+        });
+      }
+      if (opex === 0) {
+        list.push({
+          tone: 'lilac',
+          title: 'Lengkapi Catatan Biaya Operasional',
+          body: 'Belum ada biaya operasional (sewa, listrik, gaji, promosi) yang dicatat pada periode ini. Mencatat biaya rutin akan membuat perhitungan laba bersih lebih akurat.'
+        });
+      }
+      return list;
+    }
+
+    function renderInsightPage() {
+      const insights = generateBusinessInsights(appState.transactions, appState.expenses);
+      document.getElementById('insightListContainer').innerHTML = insights.map(i => `
+        <div class="insight-item ${i.tone}">
+          <h4>${escapeHtml(i.title)}</h4>
+          <p>${escapeHtml(i.body)}</p>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 14. LAPORAN BISNIS (PREVIEW, PRINT, PDF, EXCEL)
+    // =========================================================================
+    function getReportData() {
+      const type = document.getElementById('repType').value;
+      const start = document.getElementById('repStart').value;
+      const end = document.getElementById('repEnd').value;
+      const txs = filterByDate(appState.transactions, start, end);
+      const exps = filterByDate(appState.expenses, start, end);
+      const bizName = appState.profile.name || 'Usaha UMKM';
+      const periodLabel = (start || end) ? `${start || 'Awal'} s/d ${end || 'Sekarang'}` : 'Semua Periode';
+
+      let title = '', headers = [], rows = [];
+      if (type === 'laba_rugi' || type === 'ringkasan_bisnis') {
+        title = type === 'laba_rugi' ? 'Laporan Laba Rugi Sederhana' : 'Laporan Hasil Analisis Bisnis';
+        let omzet = 0, hpp = 0, extra = 0;
+        txs.forEach(t => { const c = calcTx(t); omzet += c.omzet; hpp += c.totalHpp; extra += c.extraCost; });
+        const opex = exps.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        const gross = omzet - hpp;
+        const net = gross - extra - opex;
+        const margin = omzet > 0 ? (net / omzet) * 100 : 0;
+        headers = ['Komponen Keuangan', 'Nominal'];
+        rows = [
+          ['Total Pendapatan / Omzet Bersih', formatRp(omzet)],
+          ['Total Harga Pokok Penjualan (HPP)', formatRp(hpp)],
+          ['Laba Kotor (Omzet - HPP)', formatRp(gross)],
+          ['Biaya Tambahan Transaksi', formatRp(extra)],
+          ['Biaya Operasional Tercatat', formatRp(opex)],
+          ['Laba Bersih', formatRp(net)],
+          ['Margin Laba Bersih', margin.toFixed(1) + '%'],
+          ['Jumlah Transaksi', String(txs.length)]
+        ];
+      } else if (type === 'penjualan_harian' || type === 'penjualan_bulanan') {
+        title = type === 'penjualan_harian' ? 'Laporan Penjualan Harian' : 'Laporan Penjualan Bulanan';
+        const map = {};
+        txs.forEach(t => {
+          const k = type === 'penjualan_harian' ? t.date : t.date.slice(0, 7);
+          const c = calcTx(t);
+          if (!map[k]) map[k] = { count: 0, qty: 0, omzet: 0, hpp: 0, laba: 0 };
+          map[k].count++; map[k].qty += Number(t.qty); map[k].omzet += c.omzet; map[k].hpp += c.totalHpp; map[k].laba += c.netTxProfit;
+        });
+        headers = ['Periode', 'Transaksi', 'Unit', 'Omzet', 'HPP', 'Laba'];
+        rows = Object.keys(map).sort().map(k => [k, map[k].count, map[k].qty, formatRp(map[k].omzet), formatRp(map[k].hpp), formatRp(map[k].laba)]);
+      } else if (type === 'kinerja_produk') {
+        title = 'Laporan Kinerja Produk';
+        const map = {};
+        txs.forEach(t => {
+          const c = calcTx(t);
+          if (!map[t.product]) map[t.product] = { qty: 0, omzet: 0, hpp: 0, laba: 0 };
+          map[t.product].qty += Number(t.qty); map[t.product].omzet += c.omzet; map[t.product].hpp += c.totalHpp; map[t.product].laba += c.netTxProfit;
+        });
+        headers = ['Produk', 'Unit Terjual', 'Total Omzet', 'Total HPP', 'Total Laba'];
+        rows = Object.entries(map).sort((a, b) => b[1].omzet - a[1].omzet).map(([n, v]) => [n, v.qty, formatRp(v.omzet), formatRp(v.hpp), formatRp(v.laba)]);
+      } else if (type === 'pengeluaran') {
+        title = 'Laporan Pengeluaran Operasional';
+        headers = ['Tanggal', 'Kategori', 'Keterangan', 'Nominal'];
+        rows = [...exps].sort((a, b) => b.date.localeCompare(a.date)).map(e => [e.date, e.category, e.note || '-', formatRp(e.amount)]);
+      }
+      return { bizName, title, periodLabel, headers, rows };
+    }
+
+    function renderReportPreview() {
+      const rep = getReportData();
+      document.getElementById('reportPreviewContent').innerHTML = `
+        <div style="border-bottom:2px solid var(--olive); padding-bottom:12px; margin-bottom:16px;">
+          <h3 style="font-size:18px;">${escapeHtml(rep.bizName)}</h3>
+          <p style="font-size:14px; font-weight:700; color:var(--olive);">${rep.title}</p>
+          <p style="font-size:12px; color:var(--olive-muted);">Periode: ${rep.periodLabel} | Dicetak melalui BUSINESS INSIGHT AI</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>${rep.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+            <tbody>${rep.rows.length ? rep.rows.map(r => `<tr>${r.map(c => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${rep.headers.length}" class="text-center">Tidak ada data pada periode terpilih.</td></tr>`}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function exportReportPDF() {
+      const rep = getReportData();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(15);
+      doc.text(rep.bizName, 14, 18);
+      doc.setFontSize(12);
+      doc.text(rep.title, 14, 25);
+      doc.setFontSize(9);
+      doc.text('Periode: ' + rep.periodLabel, 14, 31);
+      doc.autoTable({
+        head: [rep.headers],
+        body: rep.rows.length ? rep.rows : [['Tidak ada data']],
+        startY: 36,
+        headStyles: { fillColor: [70, 84, 66] }
+      });
+      doc.save(`${rep.title.replace(/\s+/g, '_')}.pdf`);
+      showToast('Laporan PDF berhasil diunduh.');
+    }
+
+    function exportReportExcel() {
+      const rep = getReportData();
+      const aoa = [[rep.bizName], [rep.title], ['Periode: ' + rep.periodLabel], [], rep.headers, ...rep.rows];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
+      XLSX.writeFile(wb, `${rep.title.replace(/\s+/g, '_')}.xlsx`);
+      showToast('Laporan Excel berhasil diunduh.');
+    }
+
+    // =========================================================================
+    // 15. PENGATURAN, BACKUP & RESTORE
+    // =========================================================================
+    function renderSettings() {
+      document.getElementById('setDefaultPeriod').value = appState.settings.defaultPeriod || 'month';
+    }
+
+    function saveSettings() {
+      appState.settings.defaultPeriod = document.getElementById('setDefaultPeriod').value;
+      currentDashPeriod = appState.settings.defaultPeriod;
+      saveState();
+      showToast('Pengaturan disimpan.');
+    }
+
+    function backupAllData() {
+      const blob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Backup_Business_Insight_AI_${todayISO()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('File backup JSON berhasil diunduh.');
+    }
+
+    function restoreAllData(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const parsed = JSON.parse(evt.target.result);
+          if (!Array.isArray(parsed.transactions)) throw new Error('Format tidak valid');
+          if (!confirm('Restore akan menggantikan data saat ini dengan data dari file backup. Lanjutkan?')) return;
+          appState = Object.assign(appState, parsed);
+          saveState();
+          updateGlobalUI();
+          showToast('Data berhasil dipulihkan!');
+          navigate('dashboard');
+        } catch (err) {
+          showToast('File backup tidak valid.', true);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function confirmDeleteAllData() {
+      if (!confirm('PERINGATAN: Semua data transaksi, pengeluaran, produk, dan profil akan dihapus permanen. Lanjutkan?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      appState = { profile: { name:'', owner:'', type:'', startDate:'', contact:'', address:'', desc:'' }, transactions: [], expenses: [], products: [], settings: { defaultPeriod: 'month' }, isDemo: false, chatHistory: [] };
+      updateGlobalUI();
+      showToast('Seluruh data berhasil dihapus.');
+      navigate('dashboard');
+    }
+
+    // =========================================================================
+    // INIT
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      document.getElementById('saleDate').value = todayISO();
+      document.getElementById('expDate').value = todayISO();
+      document.getElementById('dailyDatePicker').value = todayISO();
+      updateGlobalUI();
+      setDashPeriod(currentDashPeriod);
+    });
+  </script>
+</body>
+</html>
